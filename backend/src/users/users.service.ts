@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -26,21 +28,44 @@ export class UsersService {
     return { message: 'user created successfully', data: newUser };
   }
 
-  findAll() {
-    return this.userModel.find();
+  async findAll() {
+    const users = await this.userModel.find().lean();
+
+    const result = users.map(({ email, ...rest }) => rest);
+
+    return { message: 'Users found', data: result };
   }
 
-  async findById(userId: string) {
-    const user = await this.userModel.findById(userId);
+  async findById(requestingUserId: string, targetUserId: string) {
+    const isSelf = requestingUserId === targetUserId;
 
-    if (!user) throw new NotFoundException(`user with ID: ${userId} not found`);
+    const user = await this.userModel.findById(targetUserId).lean();
 
-    return { message: 'user found', data: user };
+    if (!user) throw new NotFoundException('User not found');
+
+    if (!isSelf) {
+      const { email, password, ...publicFields } = user;
+      return { message: 'User found', data: publicFields };
+    }
+
+    return { message: 'User found', data: user };
   }
 
-  async update(userId: string, updateUserDto: UpdateUserDto) {
+  async update(
+    requestingUserId: string,
+    targetUserId: string,
+    updateUserDto: UpdateUserDto,
+  ) {
+    const isSelf = requestingUserId === targetUserId;
+
+    if (!isSelf) {
+      throw new ForbiddenException(
+        'Updating other users’ profiles is not permitted.',
+      );
+    }
+
     const updatedUser = await this.userModel.findByIdAndUpdate(
-      userId,
+      targetUserId,
       updateUserDto,
       { new: true },
     );
@@ -50,8 +75,16 @@ export class UsersService {
     return { message: 'user updated successfully', data: updatedUser };
   }
 
-  async delete(userId: string) {
-    const deletedUser = await this.userModel.findByIdAndDelete(userId);
+  async delete(requestingUserId: string, targetUserId: string) {
+    const isSelf = requestingUserId === targetUserId;
+
+    if (!isSelf) {
+      throw new ForbiddenException(
+        'Updating other users’ profiles is not permitted.',
+      );
+    }
+
+    const deletedUser = await this.userModel.findByIdAndDelete(targetUserId);
 
     if (!deletedUser) throw new BadRequestException('user not found');
 
