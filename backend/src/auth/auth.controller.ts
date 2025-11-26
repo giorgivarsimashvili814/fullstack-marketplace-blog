@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { UserId } from 'src/users/decorators/user.decorator';
-import { IsAuthGuard } from './guard/is-auth.guard';
+import { IsAuthGuard } from './guards/is-auth.guard';
 
 @Controller('auth')
 export class AuthController {

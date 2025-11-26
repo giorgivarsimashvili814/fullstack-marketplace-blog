@@ -20,7 +20,7 @@ export class AuthService {
   async signUp({ username, email, password }: SignUpDto) {
     const user = await this.userModel.findOne({ email });
 
-    if (user) throw new BadRequestException('user already exists');
+    if (user) throw new BadRequestException('email in use');
 
     const hashedPassword = await bcrypt.hash(password, 10);
 

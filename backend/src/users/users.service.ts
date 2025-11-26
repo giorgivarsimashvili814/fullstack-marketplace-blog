@@ -8,32 +8,18 @@ import {
 import { Model } from 'mongoose';
 import { User } from './schema/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel('user') private readonly userModel: Model<User>) {}
 
-  async create({ username, email }: CreateUserDto) {
-    const user = await this.userModel.findOne({ email });
-
-    if (user) throw new BadRequestException('email in use');
-
-    const newUser = await this.userModel.create({
-      username,
-      email,
-    });
-
-    return { message: 'user created successfully', data: newUser };
-  }
-
   async findAll() {
     const users = await this.userModel.find().lean();
 
     const result = users.map(({ email, ...rest }) => rest);
 
-    return { message: 'Users found', data: result };
+    return { message: 'users found', data: result };
   }
 
   async findById(requestingUserId: string, targetUserId: string) {
@@ -41,14 +27,14 @@ export class UsersService {
 
     const user = await this.userModel.findById(targetUserId).lean();
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('user not found');
 
     if (!isSelf) {
-      const { email, password, ...publicFields } = user;
-      return { message: 'User found', data: publicFields };
+      const { email, ...rest } = user;
+      return { message: 'user found', data: rest };
     }
 
-    return { message: 'User found', data: user };
+    return { message: 'user found', data: user };
   }
 
   async update(
@@ -60,7 +46,7 @@ export class UsersService {
 
     if (!isSelf) {
       throw new ForbiddenException(
-        'Updating other users’ profiles is not permitted.',
+        'updating other users’ profiles is not permitted.',
       );
     }
 
@@ -80,7 +66,7 @@ export class UsersService {
 
     if (!isSelf) {
       throw new ForbiddenException(
-        'Updating other users’ profiles is not permitted.',
+        'deleting other users’ profiles is not permitted.',
       );
     }
 

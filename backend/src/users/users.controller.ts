@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { IsAuthGuard } from 'src/auth/guard/is-auth.guard';
+import { IsAuthGuard } from 'src/auth/guards/is-auth.guard';
 import { UserId } from './decorators/user.decorator';
 
 @UseGuards(IsAuthGuard)
@@ -24,17 +24,17 @@ export class UsersController {
 
   @Get(':id')
   findById(
-    @Param('id') targetUserId: string,
     @UserId() requestingUserId: string,
+    @Param('id') targetUserId: string,
   ) {
     return this.usersService.findById(requestingUserId, targetUserId);
   }
 
   @Patch(':id')
   update(
+    @UserId() requestingUserId: string,
     @Param('id') targetUserId: string,
     @Body() updateUserDto: UpdateUserDto,
-    @UserId() requestingUserId: string,
   ) {
     return this.usersService.update(
       requestingUserId,
@@ -45,8 +45,8 @@ export class UsersController {
 
   @Delete(':id')
   delete(
-    @Param('id') targetUserId: string,
     @UserId() requestingUserId: string,
+    @Param('id') targetUserId: string,
   ) {
     return this.usersService.delete(requestingUserId, targetUserId);
   }
