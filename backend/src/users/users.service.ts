@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -12,29 +10,26 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel('user') private readonly userModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private readonly userModel: Model<User>,
+  ) {}
 
   async findAll() {
-    const users = await this.userModel.find().lean();
+    const users = await this.userModel.find({}, '_id username');
 
-    const result = users.map(({ email, ...rest }) => rest);
-
-    return { message: 'users found', data: result };
+    return { message: 'Users found!', data: users };
   }
 
   async findById(requestingUserId: string, targetUserId: string) {
-    const isSelf = requestingUserId === targetUserId;
+    const user = await this.userModel.findById(targetUserId, {
+      email: requestingUserId !== targetUserId ? 0 : 1,
+      posts: 1,
+      createdAt: 1,
+    });
 
-    const user = await this.userModel.findById(targetUserId).lean();
+    if (!user) throw new NotFoundException('User not found!');
 
-    if (!user) throw new NotFoundException('user not found');
-
-    if (!isSelf) {
-      const { email, ...rest } = user;
-      return { message: 'user found', data: rest };
-    }
-
-    return { message: 'user found', data: user };
+    return { message: 'User found!', data: user };
   }
 
   async update(
@@ -42,12 +37,8 @@ export class UsersService {
     targetUserId: string,
     updateUserDto: UpdateUserDto,
   ) {
-    const isSelf = requestingUserId === targetUserId;
-
-    if (!isSelf) {
-      throw new ForbiddenException(
-        'updating other users’ profiles is not permitted.',
-      );
+    if (requestingUserId !== targetUserId) {
+      throw new ForbiddenException('You are not allowed to edit this user!');
     }
 
     const updatedUser = await this.userModel.findByIdAndUpdate(
@@ -56,24 +47,20 @@ export class UsersService {
       { new: true },
     );
 
-    if (!updatedUser) throw new BadRequestException('user not found');
+    if (!updatedUser) throw new NotFoundException('User not found!');
 
-    return { message: 'user updated successfully', data: updatedUser };
+    return { message: 'User updated successfully!', data: updatedUser };
   }
 
   async delete(requestingUserId: string, targetUserId: string) {
-    const isSelf = requestingUserId === targetUserId;
-
-    if (!isSelf) {
-      throw new ForbiddenException(
-        'deleting other users’ profiles is not permitted.',
-      );
+    if (requestingUserId !== targetUserId) {
+      throw new ForbiddenException('You are not allowed to delete this user!');
     }
 
     const deletedUser = await this.userModel.findByIdAndDelete(targetUserId);
 
-    if (!deletedUser) throw new BadRequestException('user not found');
+    if (!deletedUser) throw new NotFoundException('User not found!');
 
-    return { message: 'user deleted successfully', data: deletedUser };
+    return { message: 'User deleted successfully!', data: deletedUser };
   }
 }
