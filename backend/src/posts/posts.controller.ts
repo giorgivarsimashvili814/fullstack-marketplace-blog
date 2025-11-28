@@ -24,14 +24,14 @@ export class PostsController {
     return this.postsService.findAll();
   }
 
-  @Get(':id')
-  findById(@Param('id') postId: string) {
-    return this.postsService.findById(postId);
-  }
-
   @Get('user/:userId')
   findByUser(@Param('userId') userId: string) {
     return this.postsService.findByAuthor(userId);
+  }
+
+  @Get(':id')
+  findById(@Param('id') postId: string) {
+    return this.postsService.findById(postId);
   }
 
   @Post()

@@ -7,11 +7,15 @@ import { Model } from 'mongoose';
 import { User } from './schema/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Post } from 'src/posts/schema/post.schema';
+import { Comment } from 'src/comments/schema/comment.schema';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    @InjectModel(Post.name) private readonly postModel: Model<Post>,
+    @InjectModel(Comment.name) private readonly commentModel: Model<Comment>,
   ) {}
 
   async findAll() {
@@ -22,7 +26,9 @@ export class UsersService {
 
   async findById(requestingUserId: string, targetUserId: string) {
     const user = await this.userModel.findById(targetUserId, {
-      email: requestingUserId !== targetUserId ? 0 : 1,
+      _id: 1,
+      username: 1,
+      email: requestingUserId === targetUserId ? 1 : 0,
       posts: 1,
       createdAt: 1,
     });
@@ -56,6 +62,15 @@ export class UsersService {
     if (requestingUserId !== targetUserId) {
       throw new ForbiddenException('You are not allowed to delete this user!');
     }
+
+    await this.commentModel.deleteMany({ author: targetUserId });
+
+    const userPosts = await this.postModel.find({ author: targetUserId });
+    const postIds = userPosts.map((post) => post._id);
+
+    await this.commentModel.deleteMany({ post: { $in: postIds } });
+
+    await this.postModel.deleteMany({ author: targetUserId });
 
     const deletedUser = await this.userModel.findByIdAndDelete(targetUserId);
 
