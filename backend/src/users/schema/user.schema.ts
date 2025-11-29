@@ -25,8 +25,11 @@ export class User {
   })
   password: string;
 
-  @Prop({ type: [Types.ObjectId], ref: 'Post' })
-  posts?: Types.ObjectId[];
+  @Prop({
+    type: [{ type: Types.ObjectId, ref: 'Post' }],
+    default: [],
+  })
+  posts: Types.ObjectId[];
 }
 
 export const userSchema = SchemaFactory.createForClass(User);

@@ -24,19 +24,24 @@ export class PostsController {
     return this.postsService.findAll();
   }
 
-  @Get('user/:userId')
-  findByUser(@Param('userId') userId: string) {
-    return this.postsService.findByAuthor(userId);
+  @Post()
+  create(@UserId() authorId: string, @Body() createPostDto: CreatePostDto) {
+    return this.postsService.create(authorId, createPostDto);
+  }
+
+  @Get('author/:userId')
+  findByAuthor(@Param('userId') authorId: string) {
+    return this.postsService.findByAuthor(authorId);
+  }
+
+  @Post(':id/toggle-like')
+  toggleLike(@UserId() userId: string, @Param('id') postId: string) {
+    return this.postsService.toggleLike(userId, postId);
   }
 
   @Get(':id')
   findById(@Param('id') postId: string) {
     return this.postsService.findById(postId);
-  }
-
-  @Post()
-  create(@UserId() authorId: string, @Body() createPostDto: CreatePostDto) {
-    return this.postsService.create(authorId, createPostDto);
   }
 
   @Patch(':id')

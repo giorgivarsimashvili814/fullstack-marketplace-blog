@@ -24,14 +24,9 @@ export class CommentsController {
     return this.commentsService.findAll();
   }
 
-  @Get('user/:userId')
-  findByUser(@Param('userId') userId: string) {
-    return this.commentsService.findByAuthor(userId);
-  }
-
-  @Get(':id')
-  findById(@Param('id') commentId: string) {
-    return this.commentsService.findById(commentId);
+  @Get('author/:authorId')
+  findByAuthor(@Param('authorId') authorId: string) {
+    return this.commentsService.findByAuthor(authorId);
   }
 
   @Post('post/:postId')
@@ -41,6 +36,16 @@ export class CommentsController {
     @Body() createCommentDto: CreateCommentDto,
   ) {
     return this.commentsService.create(authorId, postId, createCommentDto);
+  }
+
+  @Post(':id/toggle-like')
+  toggleLike(@UserId() userId: string, @Param('id') commentId: string) {
+    return this.commentsService.toggleLike(userId, commentId);
+  }
+
+  @Get(':id')
+  findById(@Param('id') commentId: string) {
+    return this.commentsService.findById(commentId);
   }
 
   @Patch(':id')

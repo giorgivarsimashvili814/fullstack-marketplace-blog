@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User } from 'src/users/schema/user.schema';
 import { Post } from './schema/post.schema';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -111,5 +111,33 @@ export class PostsService {
     const deletedPost = await this.postModel.findByIdAndDelete(postId);
 
     return { message: 'Post deleted successfully!', data: deletedPost };
+  }
+
+  async toggleLike(userId: string, postId: string) {
+    const userObjectId = new Types.ObjectId(userId);
+
+    const liked = await this.postModel.exists({
+      _id: postId,
+      likes: userObjectId,
+    });
+
+    const updatedPost = await this.postModel.findByIdAndUpdate(
+      postId,
+      liked
+        ? { $pull: { likes: userObjectId } }
+        : { $addToSet: { likes: userObjectId } },
+      { new: true },
+    );
+
+    if (!updatedPost) throw new NotFoundException('Post not found');
+
+    return {
+      message: liked ? 'Post unliked successfully' : 'Post liked successfully',
+      data: {
+        ...updatedPost.toObject(),
+        likesCount: updatedPost.likes.length,
+        isLiked: !liked,
+      },
+    };
   }
 }

@@ -25,12 +25,16 @@ export class UsersService {
   }
 
   async findById(requestingUserId: string, targetUserId: string) {
+    if (requestingUserId === targetUserId) {
+      const user = await this.userModel.findById(targetUserId);
+
+      if (!user) throw new NotFoundException('User not found!');
+
+      return { message: 'User found!', data: user };
+    }
+
     const user = await this.userModel.findById(targetUserId, {
-      _id: 1,
-      username: 1,
-      email: requestingUserId === targetUserId ? 1 : 0,
-      posts: 1,
-      createdAt: 1,
+      email: 0,
     });
 
     if (!user) throw new NotFoundException('User not found!');
