@@ -34,11 +34,6 @@ export class PostsController {
     return this.postsService.findByAuthor(authorId);
   }
 
-  @Post(':id/toggle-like')
-  toggleLike(@UserId() userId: string, @Param('id') postId: string) {
-    return this.postsService.toggleLike(userId, postId);
-  }
-
   @Get(':id')
   findById(@Param('id') postId: string) {
     return this.postsService.findById(postId);

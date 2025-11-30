@@ -38,11 +38,6 @@ export class CommentsController {
     return this.commentsService.create(authorId, postId, createCommentDto);
   }
 
-  @Post(':id/toggle-like')
-  toggleLike(@UserId() userId: string, @Param('id') commentId: string) {
-    return this.commentsService.toggleLike(userId, commentId);
-  }
-
   @Get(':id')
   findById(@Param('id') commentId: string) {
     return this.commentsService.findById(commentId);

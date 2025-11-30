@@ -27,12 +27,6 @@ export class Post {
     default: [],
   })
   comments: Types.ObjectId[];
-
-  @Prop({
-    type: [{ type: Types.ObjectId, ref: 'User' }],
-    default: [],
-  })
-  likes: Types.ObjectId[];
 }
 
 export const postSchema = SchemaFactory.createForClass(Post);

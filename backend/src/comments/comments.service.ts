@@ -6,7 +6,7 @@ import {
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Comment } from './schema/comment.schema';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { User } from 'src/users/schema/user.schema';
 import { Post } from 'src/posts/schema/post.schema';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -107,35 +107,5 @@ export class CommentsService {
     const deletedComment = await this.commentModel.findByIdAndDelete(commentId);
 
     return { message: 'Comment deleted successfully!', data: deletedComment };
-  }
-
-  async toggleLike(userId: string, commentId: string) {
-    const userObjectId = new Types.ObjectId(userId);
-
-    const liked = await this.commentModel.exists({
-      _id: commentId,
-      likes: userObjectId,
-    });
-
-    const updatedComment = await this.commentModel.findByIdAndUpdate(
-      commentId,
-      liked
-        ? { $pull: { likes: userObjectId } }
-        : { $addToSet: { likes: userObjectId } },
-      { new: true },
-    );
-
-    if (!updatedComment) throw new NotFoundException('Comment not found');
-
-    return {
-      message: liked
-        ? 'Comment unliked successfully'
-        : 'Comment liked successfully',
-      data: {
-        ...updatedComment.toObject(),
-        likesCount: updatedComment.likes.length,
-        isLiked: !liked,
-      },
-    };
   }
 }

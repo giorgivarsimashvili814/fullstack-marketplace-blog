@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -49,6 +50,10 @@ export class UsersService {
   ) {
     if (requestingUserId !== targetUserId) {
       throw new ForbiddenException('You are not allowed to edit this user!');
+    }
+
+    if (!Object.keys(updateUserDto).length) {
+      throw new BadRequestException('No fields provided to update');
     }
 
     const updatedUser = await this.userModel.findByIdAndUpdate(
