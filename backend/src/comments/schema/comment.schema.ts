@@ -14,14 +14,14 @@ export class Comment {
     ref: 'Post',
     required: true,
   })
-  post: Types.ObjectId;
+  postId: Types.ObjectId;
 
   @Prop({
     type: Types.ObjectId,
     ref: 'User',
     required: true,
   })
-  author: Types.ObjectId;
+  authorId: Types.ObjectId;
 }
 
 export const commentSchema = SchemaFactory.createForClass(Comment);

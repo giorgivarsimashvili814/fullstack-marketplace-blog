@@ -1,15 +1,17 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User } from 'src/users/schema/user.schema';
 import { Post } from './schema/post.schema';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Comment } from 'src/comments/schema/comment.schema';
+import { Like } from 'src/likes/schema/like.schema';
 
 @Injectable()
 export class PostsService {
@@ -17,12 +19,11 @@ export class PostsService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Post.name) private postModel: Model<Post>,
     @InjectModel(Comment.name) private commentModel: Model<Comment>,
+    @InjectModel(Like.name) private likeModel: Model<Like>,
   ) {}
 
   async findAll() {
-    const posts = await this.postModel
-      .find()
-      .populate('author', '_id username');
+    const posts = await this.postModel.find().populate('author', 'username');
 
     return { message: 'Posts found!', data: posts };
   }
@@ -30,12 +31,7 @@ export class PostsService {
   async findById(postId: string) {
     const post = await this.postModel
       .findById(postId)
-      .populate('author', '_id username')
-      .populate({
-        path: 'comments',
-        select: '_id content author createdAt',
-        populate: { path: 'author', select: '_id username' },
-      });
+      .populate('author', 'username');
 
     if (!post) throw new NotFoundException('Post not found!');
 
@@ -48,24 +44,17 @@ export class PostsService {
     if (!authorExists) throw new NotFoundException('Author not found!');
 
     const posts = await this.postModel
-      .find({ author: authorId })
-      .populate('author', '_id username');
+      .find({ authorId: new Types.ObjectId(authorId) })
+      .populate('author', 'username');
 
     return { message: 'Posts found!', data: posts };
   }
 
   async create(authorId: string, { title, content }: CreatePostDto) {
-    const authorExists = await this.userModel.exists({ _id: authorId });
-    if (!authorExists) throw new NotFoundException('Author not found!');
-
     const newPost = await this.postModel.create({
+      authorId: new Types.ObjectId(authorId),
       title,
       content,
-      author: authorId,
-    });
-
-    await this.userModel.findByIdAndUpdate(authorId, {
-      $push: { posts: newPost._id },
     });
 
     return { message: 'Post created successfully!', data: newPost };
@@ -74,19 +63,22 @@ export class PostsService {
   async update(
     requestingUserId: string,
     postId: string,
-    { title, content }: UpdatePostDto,
+    updatePostDto: UpdatePostDto,
   ) {
     const post = await this.postModel.findById(postId);
-
     if (!post) throw new NotFoundException('Post not found!');
 
-    if (post.author.toString() !== requestingUserId) {
+    if (post.authorId.toString() !== requestingUserId) {
       throw new ForbiddenException('You are not allowed to edit this post!');
+    }
+
+    if (!Object.keys(updatePostDto).length) {
+      throw new BadRequestException('No fields provided to update');
     }
 
     const updatedPost = await this.postModel.findByIdAndUpdate(
       postId,
-      { title, content },
+      updatePostDto,
       { new: true },
     );
 
@@ -95,20 +87,21 @@ export class PostsService {
 
   async delete(requestingUserId: string, postId: string) {
     const post = await this.postModel.findById(postId);
-
     if (!post) throw new NotFoundException('Post not found!');
 
-    if (post.author.toString() !== requestingUserId) {
+    if (post.authorId.toString() !== requestingUserId) {
       throw new ForbiddenException('You are not allowed to delete this post!');
     }
 
-    await this.commentModel.deleteMany({ post: postId });
+    await this.likeModel.deleteMany({ targetId: post._id });
 
-    await this.userModel.findByIdAndUpdate(post.author, {
-      $pull: { posts: post._id },
+    const commentIds = await this.commentModel.distinct('_id', {
+      postId: post._id,
     });
+    await this.likeModel.deleteMany({ targetId: { $in: commentIds } });
+    await this.commentModel.deleteMany({ post: post._id });
 
-    const deletedPost = await this.postModel.findByIdAndDelete(postId);
+    const deletedPost = await this.postModel.findByIdAndDelete(post._id);
 
     return { message: 'Post deleted successfully!', data: deletedPost };
   }

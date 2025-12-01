@@ -20,13 +20,7 @@ export class Post {
     ref: 'User',
     required: true,
   })
-  author: Types.ObjectId;
-
-  @Prop({
-    type: [{ type: Types.ObjectId, ref: 'Comment' }],
-    default: [],
-  })
-  comments: Types.ObjectId[];
+  authorId: Types.ObjectId;
 }
 
 export const postSchema = SchemaFactory.createForClass(Post);

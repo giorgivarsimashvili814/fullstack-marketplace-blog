@@ -6,10 +6,11 @@ import {
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Comment } from './schema/comment.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User } from 'src/users/schema/user.schema';
 import { Post } from 'src/posts/schema/post.schema';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { Like } from 'src/likes/schema/like.schema';
 
 @Injectable()
 export class CommentsService {
@@ -17,12 +18,13 @@ export class CommentsService {
     @InjectModel(Comment.name) private commentModel: Model<Comment>,
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Post.name) private postModel: Model<Post>,
+    @InjectModel(Like.name) private likeModel: Model<Like>,
   ) {}
 
   async findAll() {
     const comments = await this.commentModel
       .find()
-      .populate('author', '_id username');
+      .populate('author', 'username');
 
     return { message: 'Comments found!', data: comments };
   }
@@ -30,7 +32,7 @@ export class CommentsService {
   async findById(commentId: string) {
     const comment = await this.commentModel
       .findById(commentId)
-      .populate('author', '_id username');
+      .populate('author', 'username');
 
     if (!comment) throw new NotFoundException('Comment not found!');
 
@@ -43,7 +45,7 @@ export class CommentsService {
 
     const comments = await this.commentModel
       .find({ author: authorId })
-      .populate('author', '_id username');
+      .populate('author', 'username');
 
     return { message: 'Comments found!', data: comments };
   }
@@ -58,15 +60,11 @@ export class CommentsService {
 
     const newComment = await this.commentModel.create({
       content,
-      post: postId,
-      author: authorId,
+      post: new Types.ObjectId(postId),
+      author: new Types.ObjectId(authorId),
     });
 
-    await this.postModel.findByIdAndUpdate(postId, {
-      $push: { comments: newComment._id },
-    });
-
-    return { message: 'Comment created successfully', data: newComment };
+    return { message: 'Comment created successfully!', data: newComment };
   }
 
   async update(
@@ -77,7 +75,7 @@ export class CommentsService {
     const comment = await this.commentModel.findById(commentId);
     if (!comment) throw new NotFoundException('Comment not found!');
 
-    if (comment.author.toString() !== requestingUserId) {
+    if (comment.authorId.toString() !== requestingUserId) {
       throw new ForbiddenException('You are not allowed to edit this comment!');
     }
 
@@ -87,22 +85,20 @@ export class CommentsService {
       { new: true },
     );
 
-    return { message: 'Comment updated successfully', data: updatedComment };
+    return { message: 'Comment updated successfully!', data: updatedComment };
   }
 
   async delete(requestingUserId: string, commentId: string) {
     const comment = await this.commentModel.findById(commentId);
     if (!comment) throw new NotFoundException('Comment not found!');
 
-    if (comment.author.toString() !== requestingUserId) {
+    if (comment.authorId.toString() !== requestingUserId) {
       throw new ForbiddenException(
         'You are not allowed to delete this comment!',
       );
     }
 
-    await this.postModel.findByIdAndUpdate(comment.post, {
-      $pull: { comments: comment._id },
-    });
+    await this.likeModel.deleteMany({ targetId: comment._id });
 
     const deletedComment = await this.commentModel.findByIdAndDelete(commentId);
 
