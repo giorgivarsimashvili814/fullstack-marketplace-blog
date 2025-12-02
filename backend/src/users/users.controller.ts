@@ -30,24 +30,16 @@ export class UsersController {
     return this.usersService.findById(requestingUserId, targetUserId);
   }
 
-  @Patch(':id')
+  @Patch()
   update(
     @UserId() requestingUserId: string,
-    @Param('id') targetUserId: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.usersService.update(
-      requestingUserId,
-      targetUserId,
-      updateUserDto,
-    );
+    return this.usersService.update(requestingUserId, updateUserDto);
   }
 
-  @Delete(':id')
-  delete(
-    @UserId() requestingUserId: string,
-    @Param('id') targetUserId: string,
-  ) {
-    return this.usersService.delete(requestingUserId, targetUserId);
+  @Delete()
+  delete(@UserId() requestingUserId: string) {
+    return this.usersService.delete(requestingUserId);
   }
 }

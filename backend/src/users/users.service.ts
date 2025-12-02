@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -46,35 +45,21 @@ export class UsersService {
     return { message: 'User found!', data: user };
   }
 
-  async update(
-    requestingUserId: string,
-    targetUserId: string,
-    updateUserDto: UpdateUserDto,
-  ) {
-    if (requestingUserId !== targetUserId) {
-      throw new ForbiddenException('You are not allowed to edit this user!');
-    }
-
+  async update(requestingUserId: string, updateUserDto: UpdateUserDto) {
     if (!Object.keys(updateUserDto).length) {
       throw new BadRequestException('No fields provided to update!');
     }
 
     const updatedUser = await this.userModel.findByIdAndUpdate(
-      targetUserId,
+      requestingUserId,
       updateUserDto,
       { new: true },
     );
 
-    if (!updatedUser) throw new NotFoundException('User not found!');
-
     return { message: 'User updated successfully!', data: updatedUser };
   }
 
-  async delete(requestingUserId: string, targetUserId: string) {
-    if (requestingUserId !== targetUserId) {
-      throw new ForbiddenException('You are not allowed to delete this user!');
-    }
-
+  async delete(requestingUserId: string) {
     const deletedUser = await cascadeDeleteUser(
       this.userModel,
       this.postModel,
