@@ -4,13 +4,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User } from './schema/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Post } from 'src/posts/schema/post.schema';
 import { Comment } from 'src/comments/schema/comment.schema';
 import { Like } from 'src/likes/schema/like.schema';
+import { cascadeDeleteUser } from './helpers/user.helper';
 
 @Injectable()
 export class UsersService {
@@ -70,49 +71,17 @@ export class UsersService {
   }
 
   async delete(requestingUserId: string, targetUserId: string) {
-    const user = await this.userModel.findById(targetUserId);
-    if (!user) throw new NotFoundException('User not found!');
-
     if (requestingUserId !== targetUserId) {
       throw new ForbiddenException('You are not allowed to delete this user!');
     }
 
-    //user posts
-    const userPostIds = await this.postModel.distinct('_id', {
-      authorId: user._id,
-    });
-
-    //users posts likes
-    await this.likeModel.deleteMany({ targetId: { $in: userPostIds } });
-
-    //users posts comments
-    const userPostCommentIds = await this.commentModel.distinct('_id', {
-      postId: { $in: userPostIds },
-    });
-
-    //users posts comments likes
-    await this.likeModel.deleteMany({ targetId: { $in: userPostCommentIds } });
-
-    //user comments
-    const userCommentIds = await this.commentModel.distinct('_id', {
-      authorId: user._id,
-    });
-
-    //user comment likes
-    await this.likeModel.deleteMany({ targetId: { $in: userCommentIds } });
-
-    await this.postModel.deleteMany({ _id: { $in: userPostIds } });
-    await this.commentModel.deleteMany({ _id: { $in: userPostCommentIds } });
-    await this.commentModel.deleteMany({ _id: { $in: userCommentIds } });
-    // user likes
-    await this.likeModel.deleteMany({
-      authorId: user._id,
-    });
-
-    //delete a user
-    const deletedUser = await this.userModel.findByIdAndDelete(targetUserId);
-
-    if (!deletedUser) throw new NotFoundException('User not found!');
+    const deletedUser = await cascadeDeleteUser(
+      this.userModel,
+      this.postModel,
+      this.commentModel,
+      this.likeModel,
+      new Types.ObjectId(requestingUserId),
+    );
 
     return { message: 'User deleted successfully!', data: deletedUser };
   }

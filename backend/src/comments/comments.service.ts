@@ -11,6 +11,7 @@ import { User } from 'src/users/schema/user.schema';
 import { Post } from 'src/posts/schema/post.schema';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Like } from 'src/likes/schema/like.schema';
+import { cascadeDeleteComments } from './helpers/comment.helper';
 
 @Injectable()
 export class CommentsService {
@@ -60,8 +61,8 @@ export class CommentsService {
 
     const newComment = await this.commentModel.create({
       content,
-      post: new Types.ObjectId(postId),
-      author: new Types.ObjectId(authorId),
+      postId: new Types.ObjectId(postId),
+      authorId: new Types.ObjectId(authorId),
     });
 
     return { message: 'Comment created successfully!', data: newComment };
@@ -98,10 +99,10 @@ export class CommentsService {
       );
     }
 
-    await this.likeModel.deleteMany({ targetId: comment._id });
+    await cascadeDeleteComments(this.commentModel, this.likeModel, [
+      comment._id,
+    ]);
 
-    const deletedComment = await this.commentModel.findByIdAndDelete(commentId);
-
-    return { message: 'Comment deleted successfully!', data: deletedComment };
+    return { message: 'Comment deleted successfully!', data: comment };
   }
 }

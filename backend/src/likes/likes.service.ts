@@ -55,9 +55,6 @@ export class LikesService {
   }
 
   async delete(authorId: string, targetId: string, targetType: string) {
-    const author = await this.userModel.findById(authorId);
-    if (!author) throw new NotFoundException('Author not found!');
-
     const authorObjectId = new Types.ObjectId(authorId);
     const targetObjectId = new Types.ObjectId(targetId);
 

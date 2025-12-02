@@ -12,6 +12,7 @@ import { Post } from './schema/post.schema';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Comment } from 'src/comments/schema/comment.schema';
 import { Like } from 'src/likes/schema/like.schema';
+import { cascadeDeletePosts } from './helpers/post.helper';
 
 @Injectable()
 export class PostsService {
@@ -93,16 +94,13 @@ export class PostsService {
       throw new ForbiddenException('You are not allowed to delete this post!');
     }
 
-    await this.likeModel.deleteMany({ targetId: post._id });
+    await cascadeDeletePosts(
+      this.postModel,
+      this.commentModel,
+      this.likeModel,
+      [post._id],
+    );
 
-    const commentIds = await this.commentModel.distinct('_id', {
-      postId: post._id,
-    });
-    await this.likeModel.deleteMany({ targetId: { $in: commentIds } });
-    await this.commentModel.deleteMany({ post: post._id });
-
-    const deletedPost = await this.postModel.findByIdAndDelete(post._id);
-
-    return { message: 'Post deleted successfully!', data: deletedPost };
+    return { message: 'Post deleted successfully!', data: post };
   }
 }
