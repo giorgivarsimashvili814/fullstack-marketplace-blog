@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -12,6 +13,7 @@ import { Post } from 'src/posts/schema/post.schema';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Like } from 'src/likes/schema/like.schema';
 import { cascadeDeleteComments } from './helpers/comment.helper';
+import { Reply } from 'src/replies/schema/reply.schema';
 
 @Injectable()
 export class CommentsService {
@@ -20,6 +22,7 @@ export class CommentsService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Post.name) private postModel: Model<Post>,
     @InjectModel(Like.name) private likeModel: Model<Like>,
+    @InjectModel(Reply.name) private replyModel: Model<Reply>,
   ) {}
 
   async findAll() {
@@ -61,8 +64,8 @@ export class CommentsService {
 
     const newComment = await this.commentModel.create({
       content,
-      postId: new Types.ObjectId(postId),
-      authorId: new Types.ObjectId(authorId),
+      post: new Types.ObjectId(postId),
+      author: new Types.ObjectId(authorId),
     });
 
     return { message: 'Comment created successfully!', data: newComment };
@@ -71,18 +74,22 @@ export class CommentsService {
   async update(
     requestingUserId: string,
     commentId: string,
-    { content }: UpdateCommentDto,
+    updateCommentDto: UpdateCommentDto,
   ) {
     const comment = await this.commentModel.findById(commentId);
     if (!comment) throw new NotFoundException('Comment not found!');
 
-    if (comment.authorId.toString() !== requestingUserId) {
+    if (comment.author.toString() !== requestingUserId) {
       throw new ForbiddenException('You are not allowed to edit this comment!');
+    }
+
+    if (!Object.keys(updateCommentDto).length) {
+      throw new BadRequestException('No fields provided to update');
     }
 
     const updatedComment = await this.commentModel.findByIdAndUpdate(
       commentId,
-      { content },
+      updateCommentDto,
       { new: true },
     );
 
@@ -93,15 +100,18 @@ export class CommentsService {
     const comment = await this.commentModel.findById(commentId);
     if (!comment) throw new NotFoundException('Comment not found!');
 
-    if (comment.authorId.toString() !== requestingUserId) {
+    if (comment.author.toString() !== requestingUserId) {
       throw new ForbiddenException(
         'You are not allowed to delete this comment!',
       );
     }
 
-    await cascadeDeleteComments(this.commentModel, this.likeModel, [
-      comment._id,
-    ]);
+    await cascadeDeleteComments(
+      this.commentModel,
+      this.replyModel,
+      this.likeModel,
+      [comment._id],
+    );
 
     return { message: 'Comment deleted successfully!', data: comment };
   }

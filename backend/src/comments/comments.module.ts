@@ -6,6 +6,7 @@ import { User, userSchema } from 'src/users/schema/user.schema';
 import { Post, postSchema } from 'src/posts/schema/post.schema';
 import { Comment, commentSchema } from './schema/comment.schema';
 import { Like, likeSchema } from 'src/likes/schema/like.schema';
+import { Reply, replySchema } from 'src/replies/schema/reply.schema';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { Like, likeSchema } from 'src/likes/schema/like.schema';
       { schema: userSchema, name: User.name },
       { schema: postSchema, name: Post.name },
       { schema: likeSchema, name: Like.name },
+      { schema: replySchema, name: Reply.name },
     ]),
   ],
   controllers: [CommentsController],

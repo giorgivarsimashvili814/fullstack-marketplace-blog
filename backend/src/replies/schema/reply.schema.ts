@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 
 @Schema({ timestamps: true })
-export class Comment {
+export class Reply {
   @Prop({
     type: String,
     required: true,
@@ -11,17 +11,16 @@ export class Comment {
 
   @Prop({
     type: Types.ObjectId,
-    ref: 'Post',
-    required: true,
-  })
-  post: Types.ObjectId;
-
-  @Prop({
-    type: Types.ObjectId,
     ref: 'User',
     required: true,
   })
   author: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Comment', required: true })
+  parent: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
+  replyingTo?: Types.ObjectId;
 }
 
-export const commentSchema = SchemaFactory.createForClass(Comment);
+export const replySchema = SchemaFactory.createForClass(Reply);

@@ -13,6 +13,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { Comment } from 'src/comments/schema/comment.schema';
 import { Like } from 'src/likes/schema/like.schema';
 import { cascadeDeletePosts } from './helpers/post.helper';
+import { Reply } from 'src/replies/schema/reply.schema';
 
 @Injectable()
 export class PostsService {
@@ -21,6 +22,7 @@ export class PostsService {
     @InjectModel(Post.name) private postModel: Model<Post>,
     @InjectModel(Comment.name) private commentModel: Model<Comment>,
     @InjectModel(Like.name) private likeModel: Model<Like>,
+    @InjectModel(Reply.name) private replyModel: Model<Reply>,
   ) {}
 
   async findAll() {
@@ -45,7 +47,7 @@ export class PostsService {
     if (!authorExists) throw new NotFoundException('Author not found!');
 
     const posts = await this.postModel
-      .find({ authorId: new Types.ObjectId(authorId) })
+      .find({ author: new Types.ObjectId(authorId) })
       .populate('author', 'username');
 
     return { message: 'Posts found!', data: posts };
@@ -53,7 +55,7 @@ export class PostsService {
 
   async create(authorId: string, { title, content }: CreatePostDto) {
     const newPost = await this.postModel.create({
-      authorId: new Types.ObjectId(authorId),
+      author: new Types.ObjectId(authorId),
       title,
       content,
     });
@@ -69,7 +71,7 @@ export class PostsService {
     const post = await this.postModel.findById(postId);
     if (!post) throw new NotFoundException('Post not found!');
 
-    if (post.authorId.toString() !== requestingUserId) {
+    if (post.author.toString() !== requestingUserId) {
       throw new ForbiddenException('You are not allowed to edit this post!');
     }
 
@@ -90,13 +92,14 @@ export class PostsService {
     const post = await this.postModel.findById(postId);
     if (!post) throw new NotFoundException('Post not found!');
 
-    if (post.authorId.toString() !== requestingUserId) {
+    if (post.author.toString() !== requestingUserId) {
       throw new ForbiddenException('You are not allowed to delete this post!');
     }
 
     await cascadeDeletePosts(
       this.postModel,
       this.commentModel,
+      this.replyModel,
       this.likeModel,
       [post._id],
     );

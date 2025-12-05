@@ -1,5 +1,5 @@
 import {
-  ConflictException,
+  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,6 +9,7 @@ import { Model, Types } from 'mongoose';
 import { Like } from './schema/like.schema';
 import { Post } from 'src/posts/schema/post.schema';
 import { Comment } from 'src/comments/schema/comment.schema';
+import { Reply } from 'src/replies/schema/reply.schema';
 
 @Injectable()
 export class LikesService {
@@ -17,55 +18,53 @@ export class LikesService {
     @InjectModel(Like.name) private likeModel: Model<Like>,
     @InjectModel(Post.name) private postModel: Model<Post>,
     @InjectModel(Comment.name) private commentModel: Model<Comment>,
+    @InjectModel(Reply.name) private replyModel: Model<Reply>,
   ) {}
 
-  async create(authorId: string, targetId: string, targetType: string) {
-    const author = await this.userModel.findById(authorId);
-    if (!author) throw new NotFoundException('Author not found!');
-
+  async toggleLike(
+    authorId: string,
+    targetId: string,
+    targetType: 'post' | 'comment' | 'reply',
+  ) {
     const authorObjectId = new Types.ObjectId(authorId);
     const targetObjectId = new Types.ObjectId(targetId);
 
-    const isLiked = await this.likeModel.findOne({
-      authorId: authorObjectId,
-      targetId: targetObjectId,
-      targetType,
-    });
-    if (isLiked) throw new ConflictException('Already liked!');
+    const modelMap = {
+      post: this.postModel,
+      comment: this.commentModel,
+      reply: this.replyModel,
+    } as const;
 
-    const target = targetType === 'post' ? this.postModel : this.commentModel;
+    const target = modelMap[targetType];
+    if (!target) throw new BadRequestException('Invalid targetType');
+
     const targetExists = await target.exists({ _id: targetObjectId });
     if (!targetExists) throw new NotFoundException(`${targetType} not found!`);
 
+    const existingLike = await this.likeModel.findOneAndDelete({
+      author: authorObjectId,
+      target: targetObjectId,
+      targetType,
+    });
+
+    if (existingLike) {
+      return { message: 'Unliked successfully!', data: existingLike };
+    }
+
     const newLike = await this.likeModel.findOneAndUpdate(
       {
-        authorId: authorObjectId,
-        targetId: targetObjectId,
+        author: authorObjectId,
+        target: targetObjectId,
         targetType,
       },
       {
-        authorId: authorObjectId,
-        targetId: targetObjectId,
+        author: authorObjectId,
+        target: targetObjectId,
         targetType,
       },
       { upsert: true, new: true },
     );
 
     return { message: 'Liked successfully!', data: newLike };
-  }
-
-  async delete(authorId: string, targetId: string, targetType: string) {
-    const authorObjectId = new Types.ObjectId(authorId);
-    const targetObjectId = new Types.ObjectId(targetId);
-
-    const removedLike = await this.likeModel.findOneAndDelete({
-      authorId: authorObjectId,
-      targetId: targetObjectId,
-      targetType,
-    });
-
-    if (!removedLike) throw new NotFoundException('Like not found!');
-
-    return { message: 'Unliked successfully!', data: removedLike };
   }
 }

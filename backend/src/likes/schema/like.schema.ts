@@ -8,20 +8,20 @@ export class Like {
     ref: 'User',
     required: true,
   })
-  authorId: Types.ObjectId;
+  author: Types.ObjectId;
 
   @Prop({
     type: Types.ObjectId,
     required: true,
   })
-  targetId: Types.ObjectId;
+  target: Types.ObjectId;
 
   @Prop({
     type: String,
     required: true,
-    enum: ['post', 'comment'],
+    enum: ['post', 'comment', 'reply'],
   })
-  targetType: 'post' | 'comment';
+  targetType: 'post' | 'comment' | 'reply';
 }
 
 export const likeSchema = SchemaFactory.createForClass(Like);

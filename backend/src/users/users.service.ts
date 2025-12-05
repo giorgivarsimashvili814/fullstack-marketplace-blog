@@ -11,6 +11,7 @@ import { Post } from 'src/posts/schema/post.schema';
 import { Comment } from 'src/comments/schema/comment.schema';
 import { Like } from 'src/likes/schema/like.schema';
 import { cascadeDeleteUser } from './helpers/user.helper';
+import { Reply } from 'src/replies/schema/reply.schema';
 
 @Injectable()
 export class UsersService {
@@ -19,6 +20,7 @@ export class UsersService {
     @InjectModel(Post.name) private readonly postModel: Model<Post>,
     @InjectModel(Comment.name) private readonly commentModel: Model<Comment>,
     @InjectModel(Like.name) private readonly likeModel: Model<Like>,
+    @InjectModel(Reply.name) private readonly replyModel: Model<Reply>,
   ) {}
 
   async findAll() {
@@ -64,6 +66,7 @@ export class UsersService {
       this.userModel,
       this.postModel,
       this.commentModel,
+      this.replyModel,
       this.likeModel,
       new Types.ObjectId(requestingUserId),
     );
