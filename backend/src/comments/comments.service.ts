@@ -59,8 +59,10 @@ export class CommentsService {
     postId: string,
     { content }: CreateCommentDto,
   ) {
-    const authorExists = await this.userModel.exists({ _id: authorId });
-    if (!authorExists) throw new NotFoundException('Author not found!');
+    const post = await this.postModel.exists({
+      _id: new Types.ObjectId(postId),
+    });
+    if (!post) throw new NotFoundException('Post not found!');
 
     const newComment = await this.commentModel.create({
       content,

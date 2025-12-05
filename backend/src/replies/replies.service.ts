@@ -1,8 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Comment } from 'src/comments/schema/comment.schema';
 import { Reply } from './schema/reply.schema';
+import { cascadeDeleteReplies } from './helpers/reply.helper';
+import { Like } from 'src/likes/schema/like.schema';
+import { UpdateReplyDto } from './dto/update-reply.dto';
 
 interface CreateReplyParams {
   authorId: string;
@@ -16,6 +24,7 @@ export class RepliesService {
   constructor(
     @InjectModel(Comment.name) private readonly commentModel: Model<Comment>,
     @InjectModel(Reply.name) private readonly replyModel: Model<Reply>,
+    @InjectModel(Like.name) private readonly likeModel: Model<Like>,
   ) {}
 
   async create(params: CreateReplyParams) {
@@ -23,7 +32,7 @@ export class RepliesService {
 
     const newReply = await this.replyModel.create({
       author: new Types.ObjectId(authorId),
-      parent: new Types.ObjectId(commentId),
+      comment: new Types.ObjectId(commentId),
       replyingTo: replyingTo ? new Types.ObjectId(replyingTo) : undefined,
       content,
     });
@@ -42,10 +51,48 @@ export class RepliesService {
 
     const replies = await this.replyModel
       .find({
-        parent: new Types.ObjectId(commentId),
+        comment: new Types.ObjectId(commentId),
       })
       .populate('author', 'username');
 
     return { message: 'Replies found', data: replies };
+  }
+
+  async update(
+    requestingUserId: string,
+    replyId: string,
+    updateReplyDto: UpdateReplyDto,
+  ) {
+    const reply = await this.replyModel.findById(replyId);
+    if (!reply) throw new NotFoundException('Reply not found!');
+
+    if (reply.author.toString() !== requestingUserId) {
+      throw new ForbiddenException('You are not allowed to edit this reply!');
+    }
+
+    if (!Object.keys(updateReplyDto).length) {
+      throw new BadRequestException('No fields provided to update');
+    }
+
+    const updatedReply = await this.replyModel.findByIdAndUpdate(
+      replyId,
+      updateReplyDto,
+      { new: true },
+    );
+
+    return { message: 'Reply updated successfully!', data: updatedReply };
+  }
+
+  async delete(requestingUserId: string, replyId: string) {
+    const reply = await this.replyModel.findById(replyId);
+    if (!reply) throw new NotFoundException('Reply not found!');
+
+    if (reply.author.toString() !== requestingUserId) {
+      throw new ForbiddenException('You are not allowed to delete this reply!');
+    }
+
+    await cascadeDeleteReplies(this.replyModel, this.likeModel, [reply._id]);
+
+    return { message: 'Reply deleted successfully!', data: reply };
   }
 }

@@ -17,7 +17,7 @@ export class Reply {
   author: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Comment', required: true })
-  parent: Types.ObjectId;
+  comment: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: false })
   replyingTo?: Types.ObjectId;
