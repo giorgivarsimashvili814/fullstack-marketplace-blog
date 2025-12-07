@@ -20,7 +20,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Link from "next/link";
 import { setCookie } from "cookies-next/client";
-import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SignIn() {
   const router = useRouter();
@@ -32,6 +32,8 @@ export default function SignIn() {
     resolver: yupResolver(signInSchema),
   });
 
+  const { setAuthUser, setIsLoggedIn } = useAuth();
+
   const onSubmit = async ({ email, password }: SignInType) => {
     try {
       const resp = await axiosInstance.post("/auth/sign-in", {
@@ -39,12 +41,18 @@ export default function SignIn() {
         password,
       });
       if (resp.status === 201) {
-        toast.success("logged in successfully");
-        setCookie("token", resp.data.token, { maxAge: 60 * 60 });
+        const token = resp.data.token;
+        setCookie("token", token, { maxAge: 60 * 60 });
+
+        const userRes = await axiosInstance.get("/auth/current-user");
+        setAuthUser(userRes.data);
+        setIsLoggedIn(true);
+
+        toast.success("Logged in successfully");
         router.push("/");
-        return;
+      } else {
+        toast.error(resp.data.message);
       }
-      toast.error(resp.data.message);
     } catch (error: unknown) {
       const err = error as AxiosError<{ message: string | string[] }>;
       const message = err?.response?.data?.message;
