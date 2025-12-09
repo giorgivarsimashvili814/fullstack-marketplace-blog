@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Item from "./Item";
 import { Button } from "../ui/button";
-import { redirect, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { deleteCookie } from "cookies-next";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -53,9 +53,9 @@ export default function Navbar() {
           Log Out
         </Button>
       ) : (
-        <Button variant="default" onClick={() => redirect("/auth/sign-in")}>
-          Sign In
-        </Button>
+        <Link href="/auth/sign-in">
+          <Button variant="default">Sign In</Button>
+        </Link>
       )}
     </nav>
   );

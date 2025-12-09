@@ -47,8 +47,6 @@ export default function SignIn() {
         const userRes = await axiosInstance.get("/auth/current-user");
         setAuthUser(userRes.data);
         setIsLoggedIn(true);
-
-        toast.success("Logged in successfully");
         router.push("/");
       } else {
         toast.error(resp.data.message);
@@ -68,8 +66,8 @@ export default function SignIn() {
   };
 
   return (
-    <div className="h-screen w-full flex justify-center items-center">
-      <Card className="w-full max-w-sm">
+    <div className="w-full max-w-sm">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Sign In</CardTitle>
           <CardAction>

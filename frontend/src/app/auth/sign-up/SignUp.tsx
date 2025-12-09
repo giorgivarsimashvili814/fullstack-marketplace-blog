@@ -56,8 +56,8 @@ export default function SignUp() {
   };
 
   return (
-    <div className="h-screen w-full flex justify-center items-center">
-      <Card className="w-full max-w-sm">
+    <div className="w-full max-w-sm">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Sign Up</CardTitle>
           <CardAction>
