@@ -3,28 +3,18 @@ import Link from "next/link";
 import Item from "./Item";
 import { Button } from "../ui/button";
 import { usePathname } from "next/navigation";
-import { deleteCookie } from "cookies-next";
-import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { loading, isLoggedIn, setAuthUser, setIsLoggedIn } = useAuth();
+  const { loading, isLoggedIn, signOut } = useAuth();
 
   if (loading) return <p>Loading...</p>;
 
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Posts", href: "/posts" },
-    { name: "Products", href: "/products" },
   ];
-
-  const handleLogout = () => {
-    setAuthUser(null);
-    setIsLoggedIn(false);
-    deleteCookie("token");
-    toast.success("Logged out successfully");
-  };
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 border-b bg-white">
@@ -49,7 +39,7 @@ export default function Navbar() {
       })}
 
       {isLoggedIn ? (
-        <Button variant="destructive" onClick={handleLogout}>
+        <Button variant="destructive" onClick={signOut}>
           Log Out
         </Button>
       ) : (

@@ -34,8 +34,7 @@ export default function Post({ _id, author, title, content, createdAt }: Post) {
     if (minutes > 0) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
     return `${seconds} second${seconds !== 1 ? "s" : ""} ago`;
   }
-
-  console.log(createdAt);
+  
   return (
     <Link href={`posts/${_id}`}>
       <div className="max-w-2xl border rounded-lg p-4 flex flex-col gap-2.5">

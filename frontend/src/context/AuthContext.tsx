@@ -6,8 +6,8 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { getCookie, deleteCookie } from "cookies-next";
 import { axiosInstance } from "@/lib/axios-instance";
+import { toast } from "sonner";
 
 type AuthUser = {
   _id: string;
@@ -17,10 +17,9 @@ type AuthUser = {
 
 type AuthContextType = {
   authUser: AuthUser | null;
-  setAuthUser: (user: AuthUser | null) => void;
   isLoggedIn: boolean;
-  setIsLoggedIn: (val: boolean) => void;
   loading: boolean;
+  signOut: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,13 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const checkUser = async () => {
-      const token = getCookie("token");
-
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
       try {
         const res = await axiosInstance.get("/auth/current-user");
         setAuthUser(res.data);
@@ -46,7 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         setAuthUser(null);
         setIsLoggedIn(false);
-        deleteCookie("token");
       } finally {
         setLoading(false);
       }
@@ -55,9 +46,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkUser();
   }, []);
 
+  const signOut = async () => {
+    await axiosInstance.post("/auth/sign-out", {});
+    setAuthUser(null);
+    setIsLoggedIn(false);
+    toast.success("Logged out successfully");
+  };
+
   return (
     <AuthContext.Provider
-      value={{ authUser, setAuthUser, isLoggedIn, setIsLoggedIn, loading }}
+      value={{
+        authUser,
+        isLoggedIn,
+        loading,
+        signOut,
+      }}
     >
       {children}
     </AuthContext.Provider>

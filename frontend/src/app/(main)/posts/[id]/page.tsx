@@ -1,4 +1,4 @@
-import { getAxiosWithServerCookie } from "@/lib/axios-server-instance";
+import { axiosInstance } from "@/lib/axios-instance";
 
 export default async function PostPage({
   params,
@@ -6,8 +6,6 @@ export default async function PostPage({
   params: Promise<{ id: string }>;
 }) {
   const postId = (await params).id;
-
-  const axiosInstance = await getAxiosWithServerCookie();
 
   const res = await axiosInstance.get(`/posts/${postId}`);
   const post = res.data.data;

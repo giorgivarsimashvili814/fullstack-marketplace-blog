@@ -1,9 +1,9 @@
-"use client";
-import { axiosInstance } from "@/lib/axios-instance";
-import { useEffect, useState } from "react";
 import Post from "./Post";
-import { useAuth } from "@/context/AuthContext";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { getPostsServerSide } from "./getPosts";
+import ProtectedWrapper from "@/components/ProtectedWrapper";
+import PostForm from "./PostForm";
 
 interface AuthUser {
   _id: string;
@@ -19,40 +19,31 @@ interface Post {
   createdAt: string;
 }
 
-export default function Posts() {
-  const [posts, setPosts] = useState<Post[]>([]);
+export default async function Posts() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
 
-  const { authUser } = useAuth();
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const res = await axiosInstance.get("/posts");
-        console.log(res.data.data);
-        setPosts(res.data.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchPosts();
-  }, []);
-
-  if (!authUser) {
+  if (!token) {
     redirect("/");
   }
 
+  const posts = await getPostsServerSide(token);
+
   return (
     <div className="w-full max-w-[1440px] px-4 py-12">
-      {posts.map((p) => (
-        <Post
-          key={p._id}
-          _id={p._id}
-          author={p.author}
-          title={p.title}
-          content={p.content}
-          createdAt={p.createdAt}
-        />
-      ))}
+      <ProtectedWrapper>
+        <PostForm />
+        {posts.data.map((p: Post) => (
+          <Post
+            key={p._id}
+            _id={p._id}
+            author={p.author}
+            title={p.title}
+            content={p.content}
+            createdAt={p.createdAt}
+          />
+        ))}
+      </ProtectedWrapper>
     </div>
   );
 }

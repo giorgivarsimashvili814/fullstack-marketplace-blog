@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { axiosInstance } from "@/lib/axios-instance";
 import { signInSchema, SignInType } from "@/validation/sign-in.schema";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useRouter } from "next/navigation";
@@ -19,8 +18,7 @@ import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Link from "next/link";
-import { setCookie } from "cookies-next/client";
-import { useAuth } from "@/context/AuthContext";
+import { axiosInstance } from "@/lib/axios-instance";
 
 export default function SignIn() {
   const router = useRouter();
@@ -32,21 +30,11 @@ export default function SignIn() {
     resolver: yupResolver(signInSchema),
   });
 
-  const { setAuthUser, setIsLoggedIn } = useAuth();
-
-  const onSubmit = async ({ email, password }: SignInType) => {
+  const onSubmit = async (signInData: SignInType) => {
     try {
-      const resp = await axiosInstance.post("/auth/sign-in", {
-        email,
-        password,
-      });
-      if (resp.status === 201) {
-        const token = resp.data.token;
-        setCookie("token", token, { maxAge: 60 * 60 });
+      const resp = await axiosInstance.post("/auth/sign-in", signInData);
 
-        const userRes = await axiosInstance.get("/auth/current-user");
-        setAuthUser(userRes.data);
-        setIsLoggedIn(true);
+      if (resp.status === 201) {
         router.push("/");
       } else {
         toast.error(resp.data.message);
@@ -55,13 +43,9 @@ export default function SignIn() {
       const err = error as AxiosError<{ message: string | string[] }>;
       const message = err?.response?.data?.message;
 
-      if (typeof message === "string") {
-        toast.error(message);
-      } else if (Array.isArray(message)) {
-        toast.error(message.join(", "));
-      } else {
-        toast.error("Something went wrong");
-      }
+      if (typeof message === "string") toast.error(message);
+      else if (Array.isArray(message)) toast.error(message.join(", "));
+      else toast.error("Something went wrong");
     }
   };
 
