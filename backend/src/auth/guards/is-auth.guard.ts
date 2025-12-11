@@ -12,7 +12,11 @@ interface JwtPayload {
 }
 
 interface RequestWithUser extends Request {
-  userId: string;
+  userId?: string;
+  cookies: {
+    token?: string;
+    [key: string]: string | undefined;
+  };
 }
 
 @Injectable()
@@ -21,13 +25,12 @@ export class IsAuthGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest<RequestWithUser>();
-    const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const token = req.cookies?.token;
+
+    if (!token) {
       throw new UnauthorizedException('No token provided');
     }
-
-    const token = authHeader.split(' ')[1];
 
     try {
       const payload = this.jwtService.verify<JwtPayload>(token);

@@ -9,6 +9,7 @@ import { SignUpDto } from './dto/sign-up.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { SignInDto } from './dto/sign-in.dto';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -33,22 +34,27 @@ export class AuthService {
     return { message: 'user created successfully', data: newUser };
   }
 
-  async signIn({ email, password }: SignInDto) {
+  async signIn({ email, password }: SignInDto, res: Response) {
     const user = await this.userModel.findOne({ email }).select('password');
-
     if (!user) throw new BadRequestException('invalid credentials');
 
     const isPasswordEqual = await bcrypt.compare(password, user.password);
-
     if (!isPasswordEqual) throw new BadRequestException('invalid credentials');
 
-    const payload = {
-      id: user._id,
-    };
-
+    const payload = { id: user._id };
     const token = this.jwtService.sign(payload, { expiresIn: '1h' });
 
-    return { token };
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 1000 * 60 * 60,
+    });
+
+    return {
+      success: true,
+    };
   }
 
   async getCurrentUser(userId: string) {
