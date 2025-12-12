@@ -1,13 +1,7 @@
+import { NavbarItem } from "@/types";
 import Link from "next/link";
-import React from "react";
 
-interface Item {
-  children: React.ReactNode;
-  href: string;
-  className: string;
-}
-
-export default function Item({ children, href, className }: Item) {
+export default function Item({ children, href, className }: NavbarItem) {
   return (
     <Link href={href} className={className}>
       {children}

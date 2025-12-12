@@ -2,8 +2,7 @@
 import { useAuth } from "@/context/AuthContext";
 
 export default function Homepage() {
-  const { loading, authUser } = useAuth();
-  if (loading) return <p>Loading...</p>;
+  const { authUser } = useAuth();
 
   return (
     <div className="w-full max-w-[1440px] px-4 py-12">
