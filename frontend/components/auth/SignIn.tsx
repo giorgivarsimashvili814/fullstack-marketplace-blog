@@ -6,6 +6,7 @@ import Label from "@/components/ui/Label";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { SignInType } from "@/lib/schemas";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -17,6 +18,8 @@ export default function SignIn() {
     formState: { errors, isSubmitting },
   } = useForm<SignInType>();
 
+  const router = useRouter();
+
   const onSubmit = async ({ email, password }: SignInType) => {
     try {
       const resp = await axiosInstance.post("/auth/sign-in", {
@@ -25,6 +28,8 @@ export default function SignIn() {
       });
       if (resp.status === 201) {
         reset();
+        router.push("/");
+        router.refresh();
         toast("Signed In Successfully");
       }
     } catch (error) {
