@@ -8,11 +8,9 @@ import { SignInType } from "@/lib/schemas";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 export default function SignIn() {
   const {
-    reset,
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
@@ -27,10 +25,7 @@ export default function SignIn() {
         password,
       });
       if (resp.status === 201) {
-        reset();
         router.push("/");
-        router.refresh();
-        toast("Signed In Successfully");
       }
     } catch (error) {
       console.error(error);
@@ -73,7 +68,7 @@ export default function SignIn() {
       </div>
 
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Signing In..." : "Sign In"}
+        Sign In
       </Button>
     </form>
   );

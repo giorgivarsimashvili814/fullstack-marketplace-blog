@@ -1,4 +1,4 @@
-import NavbarItem from "./NavbarItem";
+import AppLink from "../ui/AppLink";
 
 export default function Navbar() {
   const links = [
@@ -7,9 +7,11 @@ export default function Navbar() {
     { href: "/bookmarks", text: "bookmarks" },
   ];
   return (
-    <nav className=" flex gap-5">
+    <nav className="flex gap-5">
       {links.map((link) => (
-        <NavbarItem key={link.href} href={link.href} text={link.text} />
+        <AppLink key={link.href} href={link.href}>
+          {link.text}
+        </AppLink>
       ))}
     </nav>
   );

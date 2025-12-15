@@ -1,14 +1,9 @@
 import Link from "next/link";
 import Navbar from "./navbar/Navbar";
-import NavbarItem from "./navbar/NavbarItem";
 import Button from "./ui/Button";
 import { signOut } from "@/lib/actions";
-
-type User = {
-  _id: string;
-  username: string;
-  email: string;
-};
+import { User } from "@/lib/types";
+import AppLink from "./ui/AppLink";
 
 interface Props {
   user: User | null;
@@ -28,7 +23,7 @@ export default async function Header({ user }: Props) {
           </Button>
         </form>
       ) : (
-        <NavbarItem href="/auth/sign-in" text="sign in" />
+        <AppLink href="/auth/sign-in">Sign In</AppLink>
       )}
     </header>
   );

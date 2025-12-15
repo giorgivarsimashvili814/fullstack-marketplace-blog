@@ -15,7 +15,7 @@ export default function Button({
 
   return (
     <button
-      className={`${className} ${variants[variant]} px-4 py-2 rounded-md transition-colors cursor-pointer font-bold`}
+      className={`${className} ${variants[variant]} px-4 py-2 rounded-md transition-colors cursor-pointer font-bold h-10`}
       {...props}
     />
   );
