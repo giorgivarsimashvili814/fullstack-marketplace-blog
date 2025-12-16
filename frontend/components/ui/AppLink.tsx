@@ -8,7 +8,7 @@ type LinkProps = React.ComponentProps<typeof Link> & {
 export default function AppLink({ className, children, ...props }: LinkProps) {
   return (
     <Link
-      className={`${className} w-fit block rounded-md px-4 py-2 bg-black text-white h-10`}
+      className={`${className} w-fit block rounded-md px-4 py-2 bg-black text-white h-10 font-bold`}
       {...props}
     >
       {children}

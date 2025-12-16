@@ -9,18 +9,18 @@ export default async function PostCard(post: Post) {
 
   return (
     <div className="w-full max-w-2xl border rounded-lg p-4 flex flex-col gap-2.5 ">
-      <div className="flex justify-between ">
+      <div className="flex justify-between">
         <Link
           href={`/users/${currentUser?._id}`}
           className="flex gap-2.5 items-center"
         >
           <div className="h-10 w-10 rounded-full bg-black text-white font-bold flex justify-center items-center">
-            {post.author.username[0].toUpperCase()}
+            {post.author?.username[0].toUpperCase()}
           </div>
-          <h2>{post.author.username}</h2>
+          <h2>{post.author?.username}</h2>
         </Link>
 
-        {post.author._id === currentUser?._id && (
+        {post.author?._id === currentUser?._id && (
           <div className="flex gap-2.5 items-center">
             <AppLink href={`/posts/edit/${post._id}`}>edit</AppLink>
             <form action={deletePost.bind(null, post._id)}>
@@ -37,6 +37,7 @@ export default async function PostCard(post: Post) {
           <p>{post.content}</p>
         </div>
       </Link>
+      <AppLink href={`/posts/comment/${post._id}`}>comment</AppLink>
     </div>
   );
 }

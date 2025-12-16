@@ -22,6 +22,8 @@ export async function signUp(formData: FormData) {
   );
 
   if (resp.status === 201) redirect("/auth/sign-in");
+
+  throw new Error("Sign up failed");
 }
 
 export async function getCurrentUser(): Promise<User | null> {
@@ -42,8 +44,12 @@ export async function getCurrentUser(): Promise<User | null> {
       cache: "no-store",
     }
   );
-  const user = await resp.json();
-  return user;
+
+  if (!resp.ok) {
+    throw new Error("Failed to fetch current user");
+  }
+
+  return resp.json();
 }
 
 export async function signOut() {
@@ -52,11 +58,13 @@ export async function signOut() {
   revalidatePath("/");
 }
 
-export async function getPosts(): Promise<Post[] | []> {
+export async function getPosts(): Promise<Post[]> {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
-  if (!token) return [];
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
 
   const resp = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/posts`, {
     method: "GET",
@@ -67,46 +75,71 @@ export async function getPosts(): Promise<Post[] | []> {
     credentials: "include",
     cache: "no-store",
   });
+
+  if (!resp.ok) {
+    throw new Error("Failed to fetch posts");
+  }
+
   const data = await resp.json();
   const posts = data.data;
   return posts;
 }
 
-export async function getPost(postId: string): Promise<Post | null> {
+export async function getPost(postId: string): Promise<Post> {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
-  if (!token) return null;
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
 
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/posts/${postId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: `token=${token}`,
-    },
-    credentials: "include",
-    cache: "no-store",
-  });
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/posts/${postId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+      credentials: "include",
+      cache: "no-store",
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to fetch post");
+  }
+
   const data = await resp.json();
   const post = data.data;
   return post;
 }
 
-export async function getPostsByAuthor(authorId: string): Promise<Post[] | []> {
+export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
-  if (!token) return [];
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
 
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/posts/author/${authorId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: `token=${token}`,
-    },
-    credentials: "include",
-    cache: "no-store",
-  });
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/posts/author/${authorId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+      credentials: "include",
+      cache: "no-store",
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to fetch posts");
+  }
+
   const data = await resp.json();
   const posts = data.data;
   return posts;
@@ -118,15 +151,25 @@ export async function deletePost(
 ): Promise<void> {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
-  if (!token) return;
 
-  await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/posts/${postId}`, {
-    method: "DELETE",
-    headers: {
-      Cookie: `token=${token}`,
-    },
-    cache: "no-store",
-  });
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/posts/${postId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Cookie: `token=${token}`,
+      },
+      cache: "no-store",
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to delete post");
+  }
 
   revalidatePath("/posts");
 }
@@ -134,12 +177,15 @@ export async function deletePost(
 export async function createPost(formData: FormData): Promise<void> {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
-  if (!token) return;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
 
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
 
-  await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/posts`, {
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/posts`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -149,13 +195,20 @@ export async function createPost(formData: FormData): Promise<void> {
     body: JSON.stringify({ title, content }),
   });
 
+  if (!resp.ok) {
+    throw new Error("Failed to delete post");
+  }
+
   redirect("/posts");
 }
 
 export async function editPost(postId: string, formData: FormData) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
-  if (!token) return;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
 
   const titleValue = formData.get("title");
   const contentValue = formData.get("content");
@@ -168,14 +221,81 @@ export async function editPost(postId: string, formData: FormData) {
     body.content = contentValue;
   }
 
-  await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/posts/${postId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: `token=${token}`,
-    },
-    body: JSON.stringify(body),
-  });
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/posts/${postId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to edit post");
+  }
 
   redirect("/posts");
+}
+
+export async function createComment(postId: string, formData: FormData) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const content = formData.get("content") as string;
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/comments/post/${postId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+
+      body: JSON.stringify({ content }),
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to create comment");
+  }
+
+  revalidatePath("/posts");
+}
+
+export async function getCommentsByPost(postId: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/comments/post/${postId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+      credentials: "include",
+      cache: "no-store",
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to fetch comments");
+  }
+
+  const data = await resp.json();
+  const comments = data.data;
+  return comments;
 }

@@ -3,8 +3,8 @@ import AppLink from "../ui/AppLink";
 export default function Navbar() {
   const links = [
     { href: "/posts", text: "posts" },
-    { href: "/products", text: "products" },
-    { href: "/bookmarks", text: "bookmarks" },
+    // { href: "/products", text: "products" },
+    // { href: "/bookmarks", text: "bookmarks" },
   ];
   return (
     <nav className="flex gap-5">

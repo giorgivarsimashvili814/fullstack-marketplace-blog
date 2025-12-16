@@ -44,12 +44,27 @@ export class CommentsService {
   }
 
   async findByAuthor(authorId: string) {
-    const authorExists = await this.userModel.exists({ _id: authorId });
+    const authorExists = await this.userModel.exists({
+      _id: new Types.ObjectId(authorId),
+    });
     if (!authorExists) throw new NotFoundException('Author not found!');
 
     const comments = await this.commentModel
-      .find({ author: authorId })
+      .find({ author: new Types.ObjectId(authorId) })
       .populate('author', 'username');
+
+    return { message: 'Comments found!', data: comments };
+  }
+
+  async findByPost(postId: string) {
+    const postExists = await this.postModel.exists({
+      _id: new Types.ObjectId(postId),
+    });
+    if (!postExists) throw new NotFoundException('Post not found!');
+
+    const comments = await this.commentModel.find({
+      post: new Types.ObjectId(postId),
+    });
 
     return { message: 'Comments found!', data: comments };
   }

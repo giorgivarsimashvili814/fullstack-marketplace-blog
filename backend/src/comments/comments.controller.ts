@@ -29,6 +29,11 @@ export class CommentsController {
     return this.commentsService.findByAuthor(authorId);
   }
 
+  @Get('post/:postId')
+  findByPost(@Param('postId') postId: string) {
+    return this.commentsService.findByPost(postId);
+  }
+
   @Post('post/:postId')
   create(
     @UserId() authorId: string,

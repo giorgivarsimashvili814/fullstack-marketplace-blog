@@ -6,14 +6,13 @@ import { editPost } from "@/lib/actions";
 import { Post } from "@/lib/types";
 
 type Props = {
-  postId: string;
-  post: Post | null;
+  post: Post;
 };
 
-export default function EditPostForm({ postId, post }: Props) {
+export default function EditPostForm({ post }: Props) {
   return (
     <form
-      action={editPost.bind(null, postId)}
+      action={editPost.bind(null, post?._id)}
       className="w-full max-w-sm flex flex-col items-center gap-5 p-4 rounded-md border-2 bg-white"
     >
       <div className="w-full flex justify-between">
