@@ -2,6 +2,7 @@ import { Post } from "@/lib/types";
 import Button from "../ui/Button";
 import Textarea from "../ui/Textarea";
 import { createComment, getCurrentUser } from "@/lib/actions";
+import AppLink from "../ui/AppLink";
 
 type Props = {
   post: Post;
@@ -22,8 +23,14 @@ export default async function CreateCommentForm({ post }: Props) {
         id="content"
         name="content"
         maxLength={180}
+        required
       />
-      <Button type="submit">Add Comment</Button>
+      <div className="flex flex-col items-end gap-5">
+        <Button type="submit">Add Comment</Button>
+        <AppLink href="/posts" variant="destructive">
+          Cancel
+        </AppLink>
+      </div>
     </form>
   );
 }

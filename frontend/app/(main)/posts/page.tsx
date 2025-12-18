@@ -1,5 +1,5 @@
 import PostCard from "@/components/post/PostCard";
-import { getPosts } from "@/lib/actions";
+import { getLikesByPost, getPosts } from "@/lib/actions";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import AppLink from "@/components/ui/AppLink";
@@ -9,7 +9,7 @@ export default async function page() {
   const token = cookieStore.get("token")?.value;
 
   if (!token) redirect("/");
-
+  
   const posts = await getPosts();
 
   return (
@@ -21,10 +21,7 @@ export default async function page() {
         {posts.map((post) => (
           <PostCard
             key={post._id}
-            _id={post._id}
-            title={post.title}
-            content={post.content}
-            author={post.author}
+            post={post}
           />
         ))}
       </div>

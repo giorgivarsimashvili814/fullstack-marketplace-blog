@@ -3,6 +3,7 @@ import Input from "../ui/Input";
 import Button from "../ui/Button";
 import Textarea from "../ui/Textarea";
 import { createPost } from "@/lib/actions";
+import AppLink from "../ui/AppLink";
 
 export default function CreatePostForm() {
   return (
@@ -15,14 +16,25 @@ export default function CreatePostForm() {
       </div>
       <div className="w-full flex flex-col gap-1">
         <Label htmlFor="title">Title:</Label>
-        <Input id="title" name="title" type="text" />
+        <Input id="title" name="title" type="text" required />
       </div>
       <div className="w-full flex flex-col gap-1">
         <Label htmlFor="content">Content:</Label>
-        <Textarea id="content" name="content" maxLength={180} rows={5} />
+        <Textarea
+          id="content"
+          name="content"
+          maxLength={180}
+          rows={5}
+          required
+        />
       </div>
 
-      <Button type="submit">Add post</Button>
+      <div className="w-full flex justify-end gap-5">
+        <Button type="submit">Add post</Button>
+        <AppLink href="/posts" variant="destructive">
+          Cancel
+        </AppLink>
+      </div>
     </form>
   );
 }

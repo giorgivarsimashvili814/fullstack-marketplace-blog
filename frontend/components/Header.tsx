@@ -15,16 +15,18 @@ export default async function Header({ user }: Props) {
       <Link href="/" className="font-bold">
         My Site
       </Link>
-      <Navbar />
-      {user ? (
-        <form action={signOut}>
-          <Button type="submit" variant="destructive">
-            sign out
-          </Button>
-        </form>
-      ) : (
-        <AppLink href="/auth/sign-in">Sign In</AppLink>
-      )}
+      <div className="flex gap-5">
+        <Navbar />
+        {user ? (
+          <form action={signOut}>
+            <Button type="submit" variant="destructive">
+              sign out
+            </Button>
+          </form>
+        ) : (
+          <AppLink href="/auth/sign-in">Sign In</AppLink>
+        )}
+      </div>
     </header>
   );
 }

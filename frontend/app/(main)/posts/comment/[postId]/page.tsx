@@ -1,3 +1,4 @@
+import CommentCard from "@/components/comment/CommentCard";
 import CreateCommentForm from "@/components/comment/CreateCommentForm";
 import PostCard from "@/components/post/PostCard";
 import { getCommentsByPost, getPost } from "@/lib/actions";
@@ -20,18 +21,14 @@ export default async function page({
   const comments = await getCommentsByPost(postId);
 
   return (
-    <div className="flex flex-col">
-      <PostCard
-        key={post?._id}
-        _id={post?._id}
-        author={post?.author}
-        content={post?.content}
-        title={post?.title}
-      />
-      <CreateCommentForm post={post} />
-      <div>
+    <div className="bg-emerald-700 flex justify-between">
+      <div className="bg-amber-300 w-full max-w-2xl">
+        <PostCard post={post} />
+        <CreateCommentForm post={post} />
+      </div>
+      <div className="bg-red-400 w-full max-w-2xl">
         {comments.map((comment: Comment) => (
-          <div key={comment?._id}>{comment?.content}</div>
+          <CommentCard key={comment._id} comment={comment} />
         ))}
       </div>
     </div>

@@ -4,6 +4,7 @@ import Button from "../ui/Button";
 import Textarea from "../ui/Textarea";
 import { editPost } from "@/lib/actions";
 import { Post } from "@/lib/types";
+import AppLink from "../ui/AppLink";
 
 type Props = {
   post: Post;
@@ -33,7 +34,12 @@ export default function EditPostForm({ post }: Props) {
         />
       </div>
 
-      <Button type="submit">Edit post</Button>
+      <div className="w-full flex justify-end gap-5">
+        <Button type="submit">Edit post</Button>
+        <AppLink href="/posts" variant="destructive">
+          Cancel
+        </AppLink>
+      </div>
     </form>
   );
 }
