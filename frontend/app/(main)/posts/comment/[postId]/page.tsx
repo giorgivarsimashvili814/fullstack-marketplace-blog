@@ -21,12 +21,12 @@ export default async function page({
   const comments = await getCommentsByPost(postId);
 
   return (
-    <div className="bg-emerald-700 flex justify-between">
-      <div className="bg-amber-300 w-full max-w-2xl">
+    <div className=" flex justify-between">
+      <div className=" w-full max-w-2xl">
         <PostCard post={post} />
         <CreateCommentForm post={post} />
       </div>
-      <div className="bg-red-400 w-full max-w-2xl">
+      <div className=" w-full max-w-2xl flex flex-col gap-5">
         {comments.map((comment: Comment) => (
           <CommentCard key={comment._id} comment={comment} />
         ))}

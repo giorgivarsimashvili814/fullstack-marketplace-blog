@@ -1,5 +1,5 @@
 import PostCard from "@/components/post/PostCard";
-import { getLikesByPost, getPosts } from "@/lib/actions";
+import { getPosts } from "@/lib/actions";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import AppLink from "@/components/ui/AppLink";

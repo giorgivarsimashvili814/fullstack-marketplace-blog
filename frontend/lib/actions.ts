@@ -1,6 +1,6 @@
 "use server";
 
-import { refresh, revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Post, PostForm, User } from "./types";
@@ -74,6 +74,7 @@ export async function getPosts(): Promise<Post[]> {
     },
     credentials: "include",
     cache: "no-store",
+    next: { tags: ["posts"] },
   });
 
   if (!resp.ok) {
@@ -172,7 +173,7 @@ export async function deletePost(
   }
 
   revalidatePath("/posts");
-  redirect("/posts")
+  redirect("/posts");
 }
 
 export async function createPost(formData: FormData): Promise<void> {
@@ -271,6 +272,35 @@ export async function createComment(postId: string, formData: FormData) {
   revalidatePath("/posts");
 }
 
+export async function deleteComment(
+  commentId: string,
+  _formData?: FormData
+): Promise<void> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/comments/${commentId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Cookie: `token=${token}`,
+      },
+      cache: "no-store",
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to delete comment");
+  }
+
+  revalidatePath(`/posts`);
+}
+
 export async function getCommentsByPost(postId: string) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
@@ -326,6 +356,8 @@ export async function toggleLike(
   if (!resp.ok) {
     throw new Error("Failed to fetch post");
   }
+
+  revalidatePath("/posts")
 }
 
 export async function getLikesByPost(postId: string) {
@@ -338,6 +370,66 @@ export async function getLikesByPost(postId: string) {
 
   const resp = await fetch(
     `${process.env.NEXT_PUBLIC_SERVER_URL}/likes/post/${postId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+      credentials: "include",
+      cache: "no-store",
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to fetch likes");
+  }
+
+  const data = await resp.json();
+  const likes = data.data;
+  return likes;
+}
+
+export async function getLikesByComment(commentId: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/likes/comment/${commentId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+      credentials: "include",
+      cache: "no-store",
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to fetch likes");
+  }
+
+  const data = await resp.json();
+  const likes = data.data;
+  return likes;
+}
+
+export async function getLikesByReply(replyId: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/likes/reply/${replyId}`,
     {
       method: "GET",
       headers: {
