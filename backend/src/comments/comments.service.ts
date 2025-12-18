@@ -62,9 +62,11 @@ export class CommentsService {
     });
     if (!postExists) throw new NotFoundException('Post not found!');
 
-    const comments = await this.commentModel.find({
-      post: new Types.ObjectId(postId),
-    });
+    const comments = await this.commentModel
+      .find({
+        post: new Types.ObjectId(postId),
+      })
+      .populate('author', 'username');
 
     return { message: 'Comments found!', data: comments };
   }
