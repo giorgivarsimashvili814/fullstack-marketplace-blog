@@ -2,13 +2,14 @@ import Label from "../ui/Label";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import Textarea from "../ui/Textarea";
-import { createPost } from "@/lib/actions";
+import { createPost, getCurrentUser } from "@/lib/actions";
 import AppLink from "../ui/AppLink";
 
-export default function CreatePostForm() {
+export default async function CreatePostForm() {
+  const currentUser = await getCurrentUser();
   return (
     <form
-      action={createPost}
+      action={createPost.bind(null, currentUser._id)}
       className="w-full max-w-sm flex flex-col items-center gap-5 p-4 rounded-md border-2 bg-white"
     >
       <div className="w-full flex justify-between">

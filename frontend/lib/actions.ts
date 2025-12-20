@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { Post, PostForm, User } from "./types";
+import { PostForm, TargetType } from "./types";
 
 export async function signUp(formData: FormData) {
   const username = formData.get("username") as string;
@@ -26,7 +26,7 @@ export async function signUp(formData: FormData) {
   throw new Error("Sign up failed");
 }
 
-export async function getCurrentUser(): Promise<User | null> {
+export async function getCurrentUser() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -58,7 +58,7 @@ export async function signOut() {
   revalidatePath("/");
 }
 
-export async function getPosts(): Promise<Post[]> {
+export async function getPosts() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -72,8 +72,6 @@ export async function getPosts(): Promise<Post[]> {
       "Content-Type": "application/json",
       Cookie: `token=${token}`,
     },
-    credentials: "include",
-    cache: "no-store",
     next: { tags: ["posts"] },
   });
 
@@ -86,7 +84,7 @@ export async function getPosts(): Promise<Post[]> {
   return posts;
 }
 
-export async function getPost(postId: string): Promise<Post> {
+export async function getPost(postId: string) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -102,8 +100,7 @@ export async function getPost(postId: string): Promise<Post> {
         "Content-Type": "application/json",
         Cookie: `token=${token}`,
       },
-      credentials: "include",
-      cache: "no-store",
+      next: { tags: [`post-${postId}`] },
     }
   );
 
@@ -116,7 +113,7 @@ export async function getPost(postId: string): Promise<Post> {
   return post;
 }
 
-export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
+export async function getPostsByAuthor(authorId: string) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -132,8 +129,7 @@ export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
         "Content-Type": "application/json",
         Cookie: `token=${token}`,
       },
-      credentials: "include",
-      cache: "no-store",
+      next: { tags: [`posts-by-${authorId}`] },
     }
   );
 
@@ -146,10 +142,7 @@ export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
   return posts;
 }
 
-export async function deletePost(
-  postId: string,
-  _formData?: FormData
-): Promise<void> {
+export async function deletePost(postId: string, authorId: string) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -164,7 +157,6 @@ export async function deletePost(
       headers: {
         Cookie: `token=${token}`,
       },
-      cache: "no-store",
     }
   );
 
@@ -172,11 +164,13 @@ export async function deletePost(
     throw new Error("Failed to delete post");
   }
 
-  revalidatePath("/posts");
-  redirect("/posts");
+  revalidateTag("posts", "default");
+  revalidateTag(`posts-by-${authorId}`, "default");
+  revalidateTag(`post-${postId}`, "default");
+  redirect("/posts")
 }
 
-export async function createPost(formData: FormData): Promise<void> {
+export async function createPost(authorId: string, formData: FormData) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -198,13 +192,19 @@ export async function createPost(formData: FormData): Promise<void> {
   });
 
   if (!resp.ok) {
-    throw new Error("Failed to delete post");
+    throw new Error("Failed to create post");
   }
 
+  revalidateTag("posts", "default");
+  revalidateTag(`posts-by-${authorId}`, "default");
   redirect("/posts");
 }
 
-export async function editPost(postId: string, formData: FormData) {
+export async function editPost(
+  authorId: string,
+  postId: string,
+  formData: FormData
+) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -239,6 +239,9 @@ export async function editPost(postId: string, formData: FormData) {
     throw new Error("Failed to edit post");
   }
 
+  revalidateTag(`post-${postId}`, "default");
+  revalidateTag("posts", "default");
+  revalidateTag(`posts-by-${authorId}`, "default");
   redirect("/posts");
 }
 
@@ -269,13 +272,12 @@ export async function createComment(postId: string, formData: FormData) {
     throw new Error("Failed to create comment");
   }
 
-  revalidatePath("/posts");
+  revalidateTag(`post-${postId}`, "default");
+  revalidateTag(`comments-by-${postId}`, "default");
+  revalidatePath(`/posts/comment/${postId}`);
 }
 
-export async function deleteComment(
-  commentId: string,
-  _formData?: FormData
-): Promise<void> {
+export async function deleteComment(commentId: string, postId: string) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -298,7 +300,9 @@ export async function deleteComment(
     throw new Error("Failed to delete comment");
   }
 
-  revalidatePath(`/posts`);
+  revalidateTag(`post-${postId}`, "default");
+  revalidateTag(`comments-by-${postId}`, "default");
+  revalidatePath(`/posts/comment/${postId}`);
 }
 
 export async function getCommentsByPost(postId: string) {
@@ -317,8 +321,7 @@ export async function getCommentsByPost(postId: string) {
         "Content-Type": "application/json",
         Cookie: `token=${token}`,
       },
-      credentials: "include",
-      cache: "no-store",
+      next: { tags: [`comments-by-${postId}`] },
     }
   );
 
@@ -332,15 +335,14 @@ export async function getCommentsByPost(postId: string) {
 }
 
 export async function toggleLike(
-  targetId: string,
-  targetType: "post" | "comment" | "reply"
+  targetType: TargetType,
+  authorId: string,
+  targetId: string
 ) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
-  if (!token) {
-    throw new Error("Not authenticated");
-  }
+  if (!token) throw new Error("Not authenticated");
 
   const resp = await fetch(
     `${process.env.NEXT_PUBLIC_SERVER_URL}/likes/${targetType}/${targetId}`,
@@ -353,99 +355,33 @@ export async function toggleLike(
     }
   );
 
-  if (!resp.ok) {
-    throw new Error("Failed to fetch post");
-  }
+  if (!resp.ok) throw new Error("Failed to toggle like");
 
-  revalidatePath("/posts")
+  revalidateTag(`likes-by-${targetType}-${targetId}`, "default");
+  revalidateTag(`posts-by-${authorId}`, "default");
+  revalidateTag("posts", "default");
 }
 
-export async function getLikesByPost(postId: string) {
+export async function getLikes(targetType: TargetType, targetId: string) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
-  if (!token) {
-    throw new Error("Not authenticated");
-  }
+  if (!token) throw new Error("Not authenticated");
 
   const resp = await fetch(
-    `${process.env.NEXT_PUBLIC_SERVER_URL}/likes/post/${postId}`,
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/likes/${targetType}/${targetId}`,
     {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Cookie: `token=${token}`,
       },
-      credentials: "include",
-      cache: "no-store",
+      next: { tags: [`likes-by-${targetType}-${targetId}`] },
     }
   );
 
-  if (!resp.ok) {
-    throw new Error("Failed to fetch likes");
-  }
+  if (!resp.ok) throw new Error("Failed to fetch likes");
 
   const data = await resp.json();
-  const likes = data.data;
-  return likes;
-}
-
-export async function getLikesByComment(commentId: string) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
-
-  if (!token) {
-    throw new Error("Not authenticated");
-  }
-
-  const resp = await fetch(
-    `${process.env.NEXT_PUBLIC_SERVER_URL}/likes/comment/${commentId}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `token=${token}`,
-      },
-      credentials: "include",
-      cache: "no-store",
-    }
-  );
-
-  if (!resp.ok) {
-    throw new Error("Failed to fetch likes");
-  }
-
-  const data = await resp.json();
-  const likes = data.data;
-  return likes;
-}
-
-export async function getLikesByReply(replyId: string) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
-
-  if (!token) {
-    throw new Error("Not authenticated");
-  }
-
-  const resp = await fetch(
-    `${process.env.NEXT_PUBLIC_SERVER_URL}/likes/reply/${replyId}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `token=${token}`,
-      },
-      credentials: "include",
-      cache: "no-store",
-    }
-  );
-
-  if (!resp.ok) {
-    throw new Error("Failed to fetch likes");
-  }
-
-  const data = await resp.json();
-  const likes = data.data;
-  return likes;
+  return data.data;
 }

@@ -1,13 +1,9 @@
-import {
-  deletePost,
-  getCurrentUser,
-  getLikesByPost,
-  toggleLike,
-} from "@/lib/actions";
+import { deletePost, getCurrentUser, getLikes } from "@/lib/actions";
 import Link from "next/link";
 import Button from "../ui/Button";
 import AppLink from "../ui/AppLink";
-import { Post } from "@/lib/types";
+import { Like, Post } from "@/lib/types";
+import LikeButton from "../ui/LikeButton";
 
 type Props = {
   post: Post;
@@ -15,7 +11,12 @@ type Props = {
 
 export default async function PostCard({ post }: Props) {
   const currentUser = await getCurrentUser();
-  const likes = await getLikesByPost(post._id);
+
+  const likes = await getLikes("post", post._id);
+  
+  const likedByMe = likes.some(
+    (like: Like) => like.author._id === currentUser?._id
+  );
 
   return (
     <div className="w-full max-w-2xl border rounded-lg p-4 flex flex-col gap-5 ">
@@ -33,7 +34,7 @@ export default async function PostCard({ post }: Props) {
         {post.author?._id === currentUser?._id && (
           <div className="flex gap-2.5 items-center">
             <AppLink href={`/posts/edit/${post._id}`}>edit</AppLink>
-            <form action={deletePost.bind(null, post._id)}>
+            <form action={deletePost.bind(null, post._id, currentUser._id)}>
               <Button type="submit" variant="destructive">
                 Delete
               </Button>
@@ -48,10 +49,13 @@ export default async function PostCard({ post }: Props) {
         </div>
       </Link>
       <div className="flex gap-5">
-        <form action={toggleLike.bind(null, post._id, "post")}>
-          <Button type="submit">Like</Button>
-        </form>
-        <h1>{likes.length}</h1>
+        <LikeButton
+          initialLiked={likedByMe}
+          initialLikes={likes}
+          targetId={post._id}
+          targetAuthorId = {post.author._id}
+          targetType="post"
+        />
         <AppLink href={`/posts/comment/${post._id}`}>comment</AppLink>
       </div>
     </div>

@@ -18,7 +18,7 @@ export default async function page({
 
   return (
     <div className="flex items-center justify-center">
-      <EditPostForm post={post} />;
+      <EditPostForm post={post} authorId={post.author._id} />;
     </div>
   );
 }

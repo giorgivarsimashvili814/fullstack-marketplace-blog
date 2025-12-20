@@ -8,12 +8,13 @@ import AppLink from "../ui/AppLink";
 
 type Props = {
   post: Post;
+  authorId: string;
 };
 
-export default function EditPostForm({ post }: Props) {
+export default function EditPostForm({ post, authorId }: Props) {
   return (
     <form
-      action={editPost.bind(null, post?._id)}
+      action={editPost.bind(null, authorId, post._id)}
       className="w-full max-w-sm flex flex-col items-center gap-5 p-4 rounded-md border-2 bg-white"
     >
       <div className="w-full flex justify-between">

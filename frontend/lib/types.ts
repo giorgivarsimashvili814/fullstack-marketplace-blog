@@ -21,9 +21,11 @@ export type Comment = {
 export type Like = {
   _id: string;
   target: string;
-  author: string;
-  targetType: "post" | "comment" | "reply";
+  author: User;
+  targetType: TargetType
 };
+
+export type TargetType = "post" | "comment" | "reply";
 
 export type PostForm = {
   title?: string;
