@@ -36,7 +36,8 @@ export class CommentsService {
   async findById(commentId: string) {
     const comment = await this.commentModel
       .findById(commentId)
-      .populate('author', 'username');
+      .populate('author', 'username')
+      .populate('post');
 
     if (!comment) throw new NotFoundException('Comment not found!');
 
