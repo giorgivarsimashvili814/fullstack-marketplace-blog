@@ -17,7 +17,7 @@ export default async function CreatePostForm() {
       </div>
       <div className="w-full flex flex-col gap-1">
         <Label htmlFor="title">Title:</Label>
-        <Input id="title" name="title" type="text" required />
+        <Input id="title" name="title" type="text"   maxLength={30}  required />
       </div>
       <div className="w-full flex flex-col gap-1">
         <Label htmlFor="content">Content:</Label>

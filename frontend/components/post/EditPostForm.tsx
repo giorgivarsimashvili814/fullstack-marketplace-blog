@@ -22,7 +22,13 @@ export default function EditPostForm({ post, authorId }: Props) {
       </div>
       <div className="w-full flex flex-col gap-1">
         <Label htmlFor="title">Title:</Label>
-        <Input id="title" name="title" type="text" defaultValue={post?.title} />
+        <Input
+          id="title"
+          name="title"
+          type="text"
+          maxLength={30}
+          defaultValue={post?.title}
+        />
       </div>
       <div className="w-full flex flex-col gap-1">
         <Label htmlFor="content">Content:</Label>
@@ -36,7 +42,7 @@ export default function EditPostForm({ post, authorId }: Props) {
       </div>
 
       <div className="w-full flex justify-end gap-5">
-        <Button type="submit">Edit post</Button>
+        <Button type="submit">Edit</Button>
         <AppLink href="/posts" variant="destructive">
           Cancel
         </AppLink>

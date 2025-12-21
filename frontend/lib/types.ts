@@ -31,3 +31,7 @@ export type PostForm = {
   title?: string;
   content?: string;
 };
+
+export type CommentForm = {
+  content?: string;
+};

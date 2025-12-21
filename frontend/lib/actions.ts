@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { PostForm, TargetType } from "./types";
+import { CommentForm, PostForm, TargetType } from "./types";
 
 export async function signUp(formData: FormData) {
   const username = formData.get("username") as string;
@@ -72,7 +72,7 @@ export async function getPosts() {
       "Content-Type": "application/json",
       Cookie: `token=${token}`,
     },
-    next: { tags: ["posts"] },
+    next: { tags: ["posts"], revalidate: 60 },
   });
 
   if (!resp.ok) {
@@ -105,7 +105,7 @@ export async function getPost(postId: string) {
   );
 
   if (!resp.ok) {
-    throw new Error("Failed to fetch post");
+    return null;
   }
 
   const data = await resp.json();
@@ -164,10 +164,10 @@ export async function deletePost(postId: string, authorId: string) {
     throw new Error("Failed to delete post");
   }
 
-  revalidateTag("posts", "default");
-  revalidateTag(`posts-by-${authorId}`, "default");
-  revalidateTag(`post-${postId}`, "default");
-  redirect("/posts")
+  revalidateTag("posts", { expire: 0 });
+  revalidateTag(`posts-by-${authorId}`, { expire: 0 });
+  revalidateTag(`post-${postId}`, { expire: 0 });
+  redirect("/posts");
 }
 
 export async function createPost(authorId: string, formData: FormData) {
@@ -195,8 +195,9 @@ export async function createPost(authorId: string, formData: FormData) {
     throw new Error("Failed to create post");
   }
 
-  revalidateTag("posts", "default");
-  revalidateTag(`posts-by-${authorId}`, "default");
+  revalidateTag("posts", { expire: 0 });
+
+  revalidateTag(`posts-by-${authorId}`, { expire: 0 });
   redirect("/posts");
 }
 
@@ -239,10 +240,39 @@ export async function editPost(
     throw new Error("Failed to edit post");
   }
 
-  revalidateTag(`post-${postId}`, "default");
-  revalidateTag("posts", "default");
-  revalidateTag(`posts-by-${authorId}`, "default");
+  revalidateTag(`post-${postId}`, { expire: 0 });
+  revalidateTag("posts", { expire: 0 });
+  revalidateTag(`posts-by-${authorId}`, { expire: 0 });
   redirect("/posts");
+}
+
+export async function getComment(commentId: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/comments/${commentId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+      next: { tags: [`comment-${commentId}`] },
+    }
+  );
+
+  if (!resp.ok) {
+    return null;
+  }
+
+  const data = await resp.json();
+  const comment = data.data;
+  return comment;
 }
 
 export async function createComment(postId: string, formData: FormData) {
@@ -272,9 +302,8 @@ export async function createComment(postId: string, formData: FormData) {
     throw new Error("Failed to create comment");
   }
 
-  revalidateTag(`post-${postId}`, "default");
-  revalidateTag(`comments-by-${postId}`, "default");
-  revalidatePath(`/posts/comment/${postId}`);
+  revalidateTag(`post-${postId}`, { expire: 0 });
+  revalidateTag(`comments-by-${postId}`, { expire: 0 });
 }
 
 export async function deleteComment(commentId: string, postId: string) {
@@ -292,7 +321,6 @@ export async function deleteComment(commentId: string, postId: string) {
       headers: {
         Cookie: `token=${token}`,
       },
-      cache: "no-store",
     }
   );
 
@@ -300,9 +328,51 @@ export async function deleteComment(commentId: string, postId: string) {
     throw new Error("Failed to delete comment");
   }
 
-  revalidateTag(`post-${postId}`, "default");
-  revalidateTag(`comments-by-${postId}`, "default");
-  revalidatePath(`/posts/comment/${postId}`);
+  revalidateTag(`post-${postId}`, { expire: 0 });
+  revalidateTag(`comments-by-${postId}`, { expire: 0 });
+}
+
+export async function editComment(
+  authorId: string,
+  postId: string,
+  commentId: string,
+  formData: FormData
+) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const contentValue = formData.get("content");
+
+  const body: CommentForm = {};
+  if (typeof contentValue === "string" && contentValue.trim() !== "") {
+    body.content = contentValue;
+  }
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/comments/${commentId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to edit post");
+  }
+
+  revalidateTag(`post-${postId}`, { expire: 0 });
+  revalidateTag(`comment-${commentId}`, { expire: 0 });
+  revalidateTag("posts", { expire: 0 });
+  revalidateTag(`posts-by-${authorId}`, { expire: 0 });
+  redirect(`/posts/${postId}`);
 }
 
 export async function getCommentsByPost(postId: string) {
@@ -326,7 +396,7 @@ export async function getCommentsByPost(postId: string) {
   );
 
   if (!resp.ok) {
-    throw new Error("Failed to fetch comments");
+    return [];
   }
 
   const data = await resp.json();
@@ -357,9 +427,9 @@ export async function toggleLike(
 
   if (!resp.ok) throw new Error("Failed to toggle like");
 
-  revalidateTag(`likes-by-${targetType}-${targetId}`, "default");
-  revalidateTag(`posts-by-${authorId}`, "default");
-  revalidateTag("posts", "default");
+  revalidateTag(`likes-by-${targetType}-${targetId}`, { expire: 0 });
+  revalidateTag(`posts-by-${authorId}`, { expire: 0 });
+  revalidateTag("posts", { expire: 0 });
 }
 
 export async function getLikes(targetType: TargetType, targetId: string) {
