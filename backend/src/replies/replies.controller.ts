@@ -6,6 +6,8 @@ import {
   Query,
   UseGuards,
   Delete,
+  Get,
+  Patch,
 } from '@nestjs/common';
 import { RepliesService } from './replies.service';
 import { CreateReplyDto } from './dto/create-reply.dto';
@@ -17,6 +19,16 @@ import { UpdateReplyDto } from './dto/update-reply.dto';
 @Controller('replies')
 export class RepliesController {
   constructor(private readonly repliesService: RepliesService) {}
+
+  @Get('/comment/:commentId')
+  findByComment(@Param('commentId') commentId: string) {
+    return this.repliesService.findByComment(commentId);
+  }
+
+  @Get(':replyId')
+  findById(@Param('replyId') replyId: string) {
+    return this.repliesService.findById(replyId);
+  }
 
   @Post(':commentId')
   create(
@@ -33,7 +45,7 @@ export class RepliesController {
     });
   }
 
-  @Delete(':replyId')
+  @Patch(':replyId')
   update(
     @UserId() requsetingUserId: string,
     @Param('replyId') replyId: string,

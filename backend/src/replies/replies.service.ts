@@ -40,7 +40,7 @@ export class RepliesService {
     return { message: 'Reply created successfully!', data: newReply };
   }
 
-  async findByPost(commentId: string) {
+  async findByComment(commentId: string) {
     const commentExists = await this.commentModel.exists({
       _id: commentId,
     });
@@ -53,9 +53,27 @@ export class RepliesService {
       .find({
         comment: new Types.ObjectId(commentId),
       })
-      .populate('author', 'username');
+      .populate('author', 'username')
+      .populate('comment');
 
     return { message: 'Replies found', data: replies };
+  }
+
+  async findById(replyId: string) {
+    const replyExists = await this.replyModel.exists({
+      _id: replyId,
+    });
+
+    if (!replyExists) {
+      throw new NotFoundException('Reply not found');
+    }
+
+    const reply = await this.replyModel
+      .findById(replyId)
+      .populate('author', 'username')
+      .populate('comment');
+
+    return { message: 'Reply found', data: reply };
   }
 
   async update(
