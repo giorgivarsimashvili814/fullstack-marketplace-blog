@@ -18,6 +18,13 @@ export type Comment = {
   author: User;
 };
 
+export type Reply = {
+  _id: string;
+  content: string;
+  comment: Comment;
+  author: User;
+};
+
 export type Like = {
   _id: string;
   target: string;

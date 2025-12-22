@@ -76,7 +76,7 @@ export async function getPosts() {
   });
 
   if (!resp.ok) {
-    throw new Error("Failed to fetch posts");
+    throw new Error("Failed to get posts");
   }
 
   const data = await resp.json();
@@ -105,7 +105,7 @@ export async function getPost(postId: string) {
   );
 
   if (!resp.ok) {
-    return null;
+    throw new Error("Failed to get post");
   }
 
   const data = await resp.json();
@@ -134,7 +134,7 @@ export async function getPostsByAuthor(authorId: string) {
   );
 
   if (!resp.ok) {
-    throw new Error("Failed to fetch posts");
+    throw new Error("Failed to get posts");
   }
 
   const data = await resp.json();
@@ -267,7 +267,7 @@ export async function getComment(commentId: string) {
   );
 
   if (!resp.ok) {
-    return null;
+    throw new Error("Failed to get comment");
   }
 
   const data = await resp.json();
@@ -365,7 +365,7 @@ export async function editComment(
   );
 
   if (!resp.ok) {
-    throw new Error("Failed to edit post");
+    throw new Error("Failed to edit comment");
   }
 
   revalidateTag(`post-${postId}`, { expire: 0 });
@@ -396,7 +396,7 @@ export async function getCommentsByPost(postId: string) {
   );
 
   if (!resp.ok) {
-    return [];
+    throw new Error("Failed to get comments");
   }
 
   const data = await resp.json();
@@ -450,8 +450,170 @@ export async function getLikes(targetType: TargetType, targetId: string) {
     }
   );
 
-  if (!resp.ok) throw new Error("Failed to fetch likes");
+  if (!resp.ok) throw new Error("Failed to get likes");
 
   const data = await resp.json();
   return data.data;
+}
+
+export async function createReply(
+  commentId: string,
+  targetAuthorId: string,
+  formData: FormData
+) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const content = formData.get("content") as string;
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/replies/${commentId}?replyingTo=${targetAuthorId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+
+      body: JSON.stringify({ content }),
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to create reply");
+  }
+
+  revalidateTag(`comment-${commentId}`, { expire: 0 });
+  revalidateTag(`replies-by-${commentId}`, { expire: 0 });
+}
+
+export async function getRepliesByComment(commentId: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/replies/comment/${commentId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+      next: { tags: [`replies-by-${commentId}`] },
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to get replies");
+  }
+
+  const data = await resp.json();
+  const replies = data.data;
+  return replies;
+}
+
+export async function deleteReply(replyId: string, commentId: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/replies/${replyId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Cookie: `token=${token}`,
+      },
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to delete reply");
+  }
+
+  revalidateTag(`comment-${commentId}`, { expire: 0 });
+  revalidateTag(`replies-by-${commentId}`, { expire: 0 });
+}
+
+export async function editReply(
+  authorId: string,
+  commentId: string,
+  replyId: string,
+  formData: FormData
+) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const contentValue = formData.get("content");
+
+  const body: CommentForm = {};
+  if (typeof contentValue === "string" && contentValue.trim() !== "") {
+    body.content = contentValue;
+  }
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/replies/${replyId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to edit reply");
+  }
+
+  revalidateTag(`comment-${commentId}`, { expire: 0 });
+  revalidateTag(`reply-${replyId}`, { expire: 0 });
+  revalidateTag("comments", { expire: 0 });
+  revalidateTag(`replies-by-${authorId}`, { expire: 0 });
+  redirect(`/comments/${commentId}`);
+}
+
+export async function getReply(replyId: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/replies/${replyId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `token=${token}`,
+      },
+      next: { tags: [`reply-${replyId}`] },
+    }
+  );
+
+  if (!resp.ok) {
+    throw new Error("Failed to get reply");
+  }
+
+  const data = await resp.json();
+  const reply = data.data;
+  return reply;
 }

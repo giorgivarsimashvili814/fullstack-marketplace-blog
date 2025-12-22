@@ -1,33 +1,13 @@
-import {
-  deletePost,
-  getCommentsByPost,
-  getCurrentUser,
-  getLikes,
-} from "@/lib/actions";
 import Link from "next/link";
-import Button from "../ui/Button";
-import AppLink from "../ui/AppLink";
-import { Like, Post } from "@/lib/types";
-import LikeButton from "../ui/LikeButton";
+import React from "react";
 
 type Props = {
-  post: Post;
+  isAuthor: boolean;
 };
 
-export default async function PostCard({ post }: Props) {
-  const currentUser = await getCurrentUser();
-  const isAuthor = post.author?._id === currentUser?._id
-
-
-  const likes = await getLikes("post", post._id);
-  const comments = await getCommentsByPost(post._id);
-
-  const likedByMe = likes.some(
-    (like: Like) => like.author._id === currentUser?._id
-  );
-
+export default function Edit({ isAuthor = false }:Props) {
   return (
-    <div className="w-full max-w-2xl border-2 rounded-lg p-4 flex flex-col gap-5 bg-white">
+    <>
       <div className="flex justify-between">
         <Link
           href={`/users/${post.author?._id}`}
@@ -58,16 +38,6 @@ export default async function PostCard({ post }: Props) {
           <p className="overflow-wrap wrap-break-word">{post.content}</p>
         </div>
       </Link>
-      <div className="flex gap-2.5">
-        <LikeButton
-          initialLiked={likedByMe}
-          initialLikes={likes}
-          targetId={post._id}
-          targetAuthorId={post.author._id}
-          targetType="post"
-        />
-        <AppLink href={`/posts/${post._id}`}>comment {comments.length}</AppLink>
-      </div>
-    </div>
+    </>
   );
 }
