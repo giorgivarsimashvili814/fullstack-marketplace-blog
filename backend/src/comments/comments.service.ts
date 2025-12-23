@@ -28,7 +28,8 @@ export class CommentsService {
   async findAll() {
     const comments = await this.commentModel
       .find()
-      .populate('author', 'username');
+      .populate('author', 'username')
+      .populate('post');
 
     return { message: 'Comments found!', data: comments };
   }
@@ -107,11 +108,9 @@ export class CommentsService {
       throw new BadRequestException('No fields provided to update');
     }
 
-    const updatedComment = await this.commentModel.findByIdAndUpdate(
-      commentId,
-      updateCommentDto,
-      { new: true },
-    );
+    const updatedComment = await this.commentModel
+      .findByIdAndUpdate(commentId, updateCommentDto, { new: true })
+      .populate('post');
 
     return { message: 'Comment updated successfully!', data: updatedComment };
   }
