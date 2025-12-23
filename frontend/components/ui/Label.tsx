@@ -5,7 +5,7 @@ type LabelProps = React.LabelHTMLAttributes<HTMLLabelElement> & {
 export default function Label({ className, ...props }: LabelProps) {
   return (
     <label
-      className={`${className} w-full px-2 py-1`}
+      className={`${className} py-1`}
       {...props}
     />
   );

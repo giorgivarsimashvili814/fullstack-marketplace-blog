@@ -1,6 +1,5 @@
-import CommentCard from "@/components/comment/CommentCard";
 import CreateCommentForm from "@/components/comment/CreateCommentForm";
-import PostCard from "@/components/post/PostCard";
+import Card from "@/components/ui/Card";
 import { getCommentsByPost, getPost } from "@/lib/actions";
 import { Comment } from "@/lib/types";
 import { cookies } from "next/headers";
@@ -23,12 +22,12 @@ export default async function page({
   return (
     <div className="flex justify-between">
       <div className="w-full max-w-2xl flex flex-col gap-5">
-        <PostCard post={post} />
+        <Card object={post} />
         <CreateCommentForm post={post} />
       </div>
-      <div className="w-full max-w-2xl flex flex-col gap-5 overflow-y-scroll h-135">
+      <div className="w-full max-w-2xl flex flex-col gap-5 overflow-y-scroll h-135 scroll-smooth">
         {comments.map((comment: Comment) => (
-          <CommentCard key={comment._id} comment={comment} />
+          <Card key={comment._id} object={comment}/>
         ))}
       </div>
     </div>

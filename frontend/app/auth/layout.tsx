@@ -13,7 +13,7 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="flex flex-col items-center min-h-screen">
+      <body className="flex flex-col items-center min-h-screen bg-gray-200">
         <main className="w-full max-w-360 flex-1 px-6 py-12 flex items-center justify-center">{children}</main>
       </body>
     </html>

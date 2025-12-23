@@ -9,13 +9,13 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const variants = {
-    primary: "bg-black text-white hover:bg-gray-700",
-    destructive: "bg-red-600 text-white hover:bg-red-400",
+    primary: "hover:bg-gray-200",
+    destructive: "text-red-600 hover:bg-red-200",
   };
 
   return (
     <button
-      className={`${className} ${variants[variant]} px-4 py-2 rounded-md transition-colors cursor-pointer font-bold h-10`}
+      className={`p-1.5 rounded-md transition-colors cursor-pointer font-bold bg-white ${variants[variant]} ${className}`}
       {...props}
     />
   );

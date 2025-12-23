@@ -12,9 +12,9 @@ interface Props {
 export default async function Header({ user }: Props) {
   return (
     <header className="w-full sticky top-0 flex justify-between items-center px-4 py-2 border-b bg-white">
-      <Link href="/" className="font-bold">
+      <AppLink href="/">
         My Site
-      </Link>
+      </AppLink>
       <div className="flex gap-5">
         <Navbar />
         {user ? (

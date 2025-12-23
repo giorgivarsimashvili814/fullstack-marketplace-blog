@@ -364,6 +364,9 @@ export async function editComment(
     }
   );
 
+  const data = await resp.json();
+  const comment = data.data;
+
   if (!resp.ok) {
     throw new Error("Failed to edit comment");
   }
@@ -372,7 +375,7 @@ export async function editComment(
   revalidateTag(`comment-${commentId}`, { expire: 0 });
   revalidateTag("posts", { expire: 0 });
   revalidateTag(`posts-by-${authorId}`, { expire: 0 });
-  redirect(`/posts/${postId}`);
+  redirect(`/posts/${comment.post._id}`);
 }
 
 export async function getCommentsByPost(postId: string) {

@@ -29,8 +29,10 @@ export type Like = {
   _id: string;
   target: string;
   author: User;
-  targetType: TargetType
+  targetType: TargetType;
 };
+
+export type Object = Post | Comment | Reply;
 
 export type TargetType = "post" | "comment" | "reply";
 

@@ -1,20 +1,18 @@
-import Link from "next/link";
 import { signUp } from "@/lib/actions";
 import Label from "../ui/Label";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
+import AppLink from "../ui/AppLink";
 
 export default function SignUp() {
   return (
     <form
       action={signUp}
-      className="w-full max-w-sm flex flex-col items-center gap-5 p-4 rounded-md border-2 bg-white"
+      className="w-full max-w-sm flex flex-col items-center gap-5 p-4 rounded-md bg-white"
     >
-      <div className="w-full flex justify-between">
+      <div className="w-full flex justify-between items-center">
         <h1 className="font-bold">Sign Up</h1>
-        <Link href="/auth/sign-in" className="hover:underline">
-          Sign In
-        </Link>
+        <AppLink href="/auth/sign-in">Sign In</AppLink>
       </div>
       <div className="w-full flex flex-col gap-1">
         <Label htmlFor="username">Username:</Label>

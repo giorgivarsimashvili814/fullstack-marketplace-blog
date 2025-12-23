@@ -1,15 +1,7 @@
-import CommentCard from "@/components/comment/CommentCard";
-import CreateCommentForm from "@/components/comment/CreateCommentForm";
-import PostCard from "@/components/post/PostCard";
+import Card from "@/components/ui/Card";
 import CreateReplyForm from "@/components/reply/CreateReplyForm";
-import ReplyCard from "@/components/reply/ReplyCard";
-import {
-  getComment,
-  getCommentsByPost,
-  getPost,
-  getRepliesByComment,
-} from "@/lib/actions";
-import { Comment, Reply } from "@/lib/types";
+import { getComment, getRepliesByComment } from "@/lib/actions";
+import { Reply } from "@/lib/types";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -30,12 +22,12 @@ export default async function page({
   return (
     <div className="flex justify-between">
       <div className="w-full max-w-2xl flex flex-col gap-5">
-        <CommentCard comment={comment} />
+        <Card object={comment} />
         <CreateReplyForm comment={comment} />
       </div>
       <div className="w-full max-w-2xl flex flex-col gap-5 overflow-y-scroll h-135">
         {replies.map((reply: Reply) => (
-          <ReplyCard key={reply._id} reply={reply} />
+          <Card key={reply._id} object={reply} />
         ))}
       </div>
     </div>

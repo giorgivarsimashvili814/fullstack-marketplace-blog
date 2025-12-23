@@ -5,9 +5,9 @@ import Input from "@/components/ui/Input";
 import Label from "@/components/ui/Label";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { SignInType } from "@/lib/schemas";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import AppLink from "../ui/AppLink";
 
 export default function SignIn() {
   const {
@@ -35,13 +35,13 @@ export default function SignIn() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="w-full max-w-sm flex flex-col items-center gap-5 p-4 rounded-md border-2 bg-white"
+      className="w-full max-w-sm flex flex-col items-center gap-5 p-4 rounded-md bg-white"
     >
-      <div className="w-full flex justify-between">
+      <div className="w-full flex justify-between items-center">
         <h1 className="font-bold">Sign In</h1>
-        <Link href="/auth/sign-up" className="hover:underline">
+        <AppLink href="/auth/sign-up">
           Sign Up
-        </Link>
+        </AppLink>
       </div>
       <div className="w-full flex flex-col gap-1">
         <Label htmlFor="signin-email">Email:</Label>

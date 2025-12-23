@@ -1,4 +1,4 @@
-import PostCard from "@/components/post/PostCard";
+import Card from "@/components/ui/Card";
 import { getPostsByAuthor } from "@/lib/actions";
 import { Post } from "@/lib/types";
 import { cookies } from "next/headers";
@@ -20,8 +20,8 @@ export default async function page({
   return (
     <>
       page for user: {userId}
-      {posts.map((post:Post) => (
-        <PostCard key={post._id} post={post} />
+      {posts.map((post: Post) => (
+        <Card key={post._id} object={post}/>
       ))}
     </>
   );
