@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Navbar from "./navbar/Navbar";
 import Button from "./ui/Button";
 import { signOut } from "@/lib/actions";
@@ -11,11 +10,11 @@ interface Props {
 
 export default async function Header({ user }: Props) {
   return (
-    <header className="w-full sticky top-0 flex justify-between items-center px-4 py-2 border-b bg-white">
+    <header className="w-full sticky top-0 flex justify-between items-center px-4 py-2 shadow bg-white">
       <AppLink href="/">
         My Site
       </AppLink>
-      <div className="flex gap-5">
+      <div className="flex gap-2.5">
         <Navbar />
         {user ? (
           <form action={signOut}>

@@ -409,7 +409,6 @@ export async function getCommentsByPost(postId: string) {
 
 export async function toggleLike(
   targetType: TargetType,
-  authorId: string,
   targetId: string
 ) {
   const cookieStore = await cookies();
@@ -431,7 +430,6 @@ export async function toggleLike(
   if (!resp.ok) throw new Error("Failed to toggle like");
 
   revalidateTag(`likes-by-${targetType}-${targetId}`, { expire: 0 });
-  revalidateTag(`posts-by-${authorId}`, { expire: 0 });
   revalidateTag("posts", { expire: 0 });
 }
 

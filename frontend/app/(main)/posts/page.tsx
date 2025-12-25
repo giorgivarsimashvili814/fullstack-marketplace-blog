@@ -1,9 +1,8 @@
-import { getPosts } from "@/lib/actions";
+import { getCurrentUser, getPosts } from "@/lib/actions";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import AppLink from "@/components/ui/AppLink";
 import { Post } from "@/lib/types";
-import Card from "@/components/ui/Card";
+import PostCard from "@/components/post/PostCard";
 
 export default async function page() {
   const cookieStore = await cookies();
@@ -12,17 +11,13 @@ export default async function page() {
   if (!token) redirect("/");
 
   const posts = await getPosts();
+  const currentUser = await getCurrentUser();
 
   return (
-    <div className="grid place-items-center">
-      <AppLink className="mb-5" href="/posts/create">
-        Add Post
-      </AppLink>
-      <div className="w-full grid grid-cols-3 gap-5 place-items-center max-xl:grid-cols-2 max-md:grid-cols-1">
-        {posts.map((post: Post) => (
-          <Card key={post._id} object={post} type="post" />
-        ))}
-      </div>
+    <div className="flex flex-col items-center gap-5">
+      {posts.map((post: Post) => (
+        <PostCard key={post._id} post={post} currentUser={currentUser} />
+      ))}
     </div>
   );
 }
