@@ -5,7 +5,7 @@ import { User } from "@/lib/types";
 import AppLink from "./ui/AppLink";
 
 interface Props {
-  user: User | null;
+  user: User
 }
 
 export default async function Header({ user }: Props) {

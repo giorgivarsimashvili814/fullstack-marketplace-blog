@@ -4,6 +4,6 @@ type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
 
 export default function Textarea({ className, ...props }: TextareaProps) {
   return (
-    <textarea className={`${className} p-2 rounded-md border-2`} {...props}></textarea>
+    <textarea className={`${className} w-full p-2 rounded-md border`} {...props}></textarea>
   );
 }

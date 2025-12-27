@@ -142,7 +142,7 @@ export async function getPostsByAuthor(authorId: string) {
   return posts;
 }
 
-export async function deletePost(postId: string, authorId: string) {
+export async function deletePost(postId: string) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -165,7 +165,6 @@ export async function deletePost(postId: string, authorId: string) {
   }
 
   revalidateTag("posts", { expire: 0 });
-  revalidateTag(`posts-by-${authorId}`, { expire: 0 });
   revalidateTag(`post-${postId}`, { expire: 0 });
   redirect("/posts");
 }
@@ -407,10 +406,7 @@ export async function getCommentsByPost(postId: string) {
   return comments;
 }
 
-export async function toggleLike(
-  targetType: TargetType,
-  targetId: string
-) {
+export async function toggleLike(targetType: TargetType, targetId: string) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 

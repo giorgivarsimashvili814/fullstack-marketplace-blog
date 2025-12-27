@@ -10,8 +10,8 @@ export default async function page() {
 
   if (!token) redirect("/");
 
-  const posts = await getPosts();
   const currentUser = await getCurrentUser();
+  const posts = await getPosts();
 
   return (
     <div className="flex flex-col items-center gap-5">
